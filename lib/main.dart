@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'constants.dart';
+import 'login_screen.dart'; 
 
 void main() {
   runApp(const TheKomarsApp());
@@ -13,8 +14,6 @@ class TheKomarsApp extends StatelessWidget {
     return MaterialApp(
       title: 'The Komars',
       debugShowCheckedModeBanner: false,
-      
-      // Theme Configuration
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,
@@ -26,63 +25,24 @@ class TheKomarsApp extends StatelessWidget {
           background: AppColors.background,
           brightness: Brightness.light,
         ),
-        
-        // Typography
         textTheme: AppStyles.textTheme,
-        
-        // Component Themes
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          centerTitle: true,
-          iconTheme: IconThemeData(color: AppColors.secondary),
-          titleTextStyle: TextStyle(
-            color: AppColors.secondary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        inputDecorationTheme: InputDecorationTheme(
+          labelStyle: TextStyle(color: Colors.grey[700]),
+          prefixIconColor: Colors.grey[600],
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade400),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: AppStyles.primaryButtonStyle,
         ),
       ),
-      
-      home: const InitializationScreen(),
-    );
-  }
-}
-
-class InitializationScreen extends StatelessWidget {
-  const InitializationScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              size: 64,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Initialization Complete',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Welcome to The Komars',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      ),
+      home: const LoginScreen(), 
     );
   }
 }
