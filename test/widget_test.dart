@@ -11,20 +11,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tubes/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Initialization screen loads correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    // Kita menggunakan TheKomarsApp, bukan MyApp.
+    await tester.pumpWidget(const TheKomarsApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that our specific text is present.
+    // Default flutter test mencari angka '0' dan '1' (counter),
+    // tapi karena kita mengganti UI-nya, kita harus mengubah ekspektasi test-nya juga.
+    expect(find.text('Initialization Complete'), findsOneWidget);
+    expect(find.text('Welcome to The Komars'), findsOneWidget);
+    
+    // Verify standard icons exist
+    expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
   });
 }
