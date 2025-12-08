@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart'; 
-import 'register_screen.dart'; 
+import 'register_screen.dart';
+import 'forgot_password_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,17 +27,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
+      // Logika login sementara
       print("Login Logic Triggered");
       print("Email: ${_emailController.text}");
-      // Di sini nanti logika autentikasi ke backend/firebase
     }
   }
 
-  // Fungsi khusus untuk navigasi
+  // Fungsi Navigasi ke Register
   void _navigateToRegister() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const RegisterScreen()),
+    );
+  }
+
+  // Fungsi Navigasi ke Forgot Password 
+  void _navigateToForgotPassword() {
+    print("Navigating to Forgot Password Screen..."); // Log untuk debugging
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
     );
   }
 
@@ -65,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Taste With Pleasure',
+                    'Food delivery made simple',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
@@ -108,13 +118,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   
-                  // Forgot Password
+                  // TOMBOL FORGOT PASSWORD
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        // Logika lupa password (nanti)
-                      },
+                      // Pastikan memanggil fungsi _navigateToForgotPassword
+                      onPressed: _navigateToForgotPassword, 
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.secondary,
                       ),
@@ -136,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Register Link 
+                  // Register Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -145,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: GoogleFonts.poppins(color: Colors.grey[700]),
                       ),
                       TextButton(
-                        onPressed: _navigateToRegister, // Memanggil fungsi navigasi
+                        onPressed: _navigateToRegister,
                         child: Text(
                           'Register',
                           style: GoogleFonts.poppins(
