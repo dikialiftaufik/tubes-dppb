@@ -4,24 +4,58 @@ import 'constants.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // State Variables 
+  String _name = "Diki Alif Taufik";
+  String _email = "diki@example.com";
+  String _phone = "+62 812 3456 7890";
+  String _password = "password123";
+  bool _hasCustomPhoto = false; // Simulasi status foto profil
+
+  // Fungsi untuk navigasi ke Edit dan MENUNGGU data balik
+  void _navigateToEditProfile() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          currentName: _name,
+          currentEmail: _email,
+          currentPhone: _phone,
+          currentPassword: _password,
+        ),
+      ),
+    );
+
+    // Jika ada data yang dikembalikan (User menekan Simpan)
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        _name = result['name'];
+        _email = result['email'];
+        _phone = result['phone'];
+        _password = result['password'];
+        
+        // Cek jika ada flag foto berubah
+        if (result['photoUpdated'] == true) {
+          _hasCustomPhoto = !_hasCustomPhoto; // Toggle simulasi foto
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Data Dummy
-    final TextEditingController nameController = TextEditingController(
-      text: "Diki Alif Taufik",
-    );
-    final TextEditingController emailController = TextEditingController(
-      text: "diki@example.com",
-    );
-    final TextEditingController phoneController = TextEditingController(
-      text: "+62 812 3456 7890",
-    );
-    final TextEditingController passwordController = TextEditingController(
-      text: "password123",
-    );
+    // Controller hanya untuk menampilkan teks (Read Only)
+    final nameController = TextEditingController(text: _name);
+    final emailController = TextEditingController(text: _email);
+    final phoneController = TextEditingController(text: _phone);
+    final passwordController = TextEditingController(text: _password);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -29,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        titleSpacing: 0, // Membuat judul berdekatan dengan icon back
+        titleSpacing: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
           onPressed: () => Navigator.pop(context),
@@ -45,44 +79,36 @@ class ProfileScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            24,
-            10,
-            24,
-            40,
-          ), // Padding bawah ekstra
+          padding: const EdgeInsets.fromLTRB(24, 10, 24, 40),
           child: Column(
             children: [
-              // --- Avatar Section (Tanpa Icon Pensil) ---
+              // --- Avatar Section ---
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.primary, width: 2),
                 ),
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.grey,
-                  child: Icon(Icons.person, size: 60, color: Colors.white),
+                  backgroundColor: _hasCustomPhoto ? AppColors.secondary : Colors.grey,
+                  // Simulasi perubahan foto: Jika diedit, icon berubah jadi wajah
+                  child: Icon(
+                    _hasCustomPhoto ? Icons.face : Icons.person,
+                    size: 60,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // --- Tombol Edit Profil (Kecil di bawah avatar) ---
+              // --- Tombol Edit Profil ---
               SizedBox(
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EditProfileScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: _navigateToEditProfile, // Panggil fungsi async di atas
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        AppColors.primary, // Warna Orange (bukan hitam)
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -99,57 +125,31 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
+              
               const SizedBox(height: 32),
 
-              // --- Form Data (Disabled) ---
-              _buildReadOnlyField(
-                "Nama Lengkap",
-                nameController,
-                Icons.person_outline,
-              ),
+              // --- Form Data (Read Only) ---
+              _buildReadOnlyField("Nama Lengkap", nameController, Icons.person_outline),
               const SizedBox(height: 16),
-              _buildReadOnlyField(
-                "Email",
-                emailController,
-                Icons.email_outlined,
-              ),
+              _buildReadOnlyField("Email", emailController, Icons.email_outlined),
               const SizedBox(height: 16),
-              _buildReadOnlyField(
-                "Nomor Telepon",
-                phoneController,
-                Icons.phone_outlined,
-              ),
+              _buildReadOnlyField("Nomor Telepon", phoneController, Icons.phone_outlined),
               const SizedBox(height: 16),
-              _buildReadOnlyField(
-                "Kata Sandi",
-                passwordController,
-                Icons.lock_outline,
-                isObscure: true,
-              ),
+              _buildReadOnlyField("Kata Sandi", passwordController, Icons.lock_outline, isObscure: true),
 
-              // --- SPACING KOSONG SETARA 1 FIELD ---
-              // Memberi jarak sebelum tombol logout
               const SizedBox(height: 60),
-
-              // --- Divider Pemisah ---
               const Divider(color: Colors.grey, thickness: 0.5),
               const SizedBox(height: 24),
 
-              // --- Tombol Keluar (Logout) ---
-              // Diletakkan di sini (dalam scroll) agar aman untuk BottomBar nanti
+              // --- Tombol Keluar ---
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    // Kembali ke halaman Login
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                      (route) =>
-                          false, 
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
                     );
                   },
                   icon: const Icon(Icons.logout_rounded, size: 20),
@@ -174,12 +174,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReadOnlyField(
-    String label,
-    TextEditingController controller,
-    IconData icon, {
-    bool isObscure = false,
-  }) {
+  Widget _buildReadOnlyField(String label, TextEditingController controller, IconData icon, {bool isObscure = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -196,7 +191,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         TextFormField(
           controller: controller,
-          readOnly: true, // Form disabled
+          readOnly: true,
           obscureText: isObscure,
           style: GoogleFonts.poppins(
             color: AppColors.secondary,
@@ -206,12 +201,8 @@ class ProfileScreen extends StatelessWidget {
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: Colors.grey[400], size: 22),
             filled: true,
-            fillColor:
-                Colors.grey[50], // Background abu-abu menandakan disabled
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 0,
-              horizontal: 12,
-            ),
+            fillColor: Colors.grey[50],
+            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
