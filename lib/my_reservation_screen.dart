@@ -3,18 +3,25 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 
 class MyReservationScreen extends StatelessWidget {
-  const MyReservationScreen({super.key});
+  // REVISI: Tambahkan parameter ini
+  final int initialIndex;
+
+  const MyReservationScreen({super.key, this.initialIndex = 0});
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: initialIndex, // Pakai parameter di sini
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text('Reservasi Saya', style: GoogleFonts.poppins(color: Colors.white)),
+          title: Text(
+            initialIndex == 0 ? 'Reservasi Berlangsung' : 'Riwayat Reservasi',
+            style: GoogleFonts.poppins(color: Colors.white),
+          ),
+          automaticallyImplyLeading: false, 
           backgroundColor: AppColors.primary,
-          iconTheme: const IconThemeData(color: Colors.white),
           bottom: TabBar(
             indicatorColor: Colors.white,
             labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
@@ -37,13 +44,13 @@ class MyReservationScreen extends StatelessWidget {
   }
 }
 
+// Widget List Bawahnya (Tidak Berubah)
 class _ReservationList extends StatelessWidget {
   final String status;
   const _ReservationList({required this.status});
 
   @override
   Widget build(BuildContext context) {
-    // Dummy Data
     final isHistory = status == 'history';
     final itemCount = isHistory ? 5 : 2; 
 

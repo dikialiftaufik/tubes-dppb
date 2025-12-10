@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'reservation_form_screen.dart'; 
-import 'my_reservation_screen.dart'; 
+import 'profile_screen.dart'; // Pastikan import profile_screen.dart
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,28 +12,26 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        // REVISI 1: Matikan tombol back otomatis
+        automaticallyImplyLeading: false, 
         backgroundColor: AppColors.primary,
         title: Text(
           'The Komars',
           style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
+          // REVISI 2: Hapus History & Logout, Ganti dengan Profile
           IconButton(
-            icon: const Icon(Icons.history, color: Colors.white),
+            icon: const Icon(Icons.person, color: Colors.white),
+            tooltip: 'Profil Saya',
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const MyReservationScreen()),
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              // Logika logout bisa ditambahkan di sini
-              Navigator.pop(context); 
-            },
-          ),
+          const SizedBox(width: 8), 
         ],
       ),
       body: SingleChildScrollView(
@@ -41,7 +39,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Section
+            // Sapaan
             Text(
               'Mau makan enak\nhari ini?',
               style: GoogleFonts.poppins(
@@ -52,7 +50,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Card Promo / Banner
+            // Banner Promo
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -105,7 +103,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             
-            // Grid Dummy Menu (Temanmu yang bagian menu bisa mengisi ini nanti)
+            // Grid Menu Dummy
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
