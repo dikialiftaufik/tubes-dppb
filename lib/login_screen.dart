@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart'; 
 import 'register_screen.dart';
 import 'forgot_password_screen.dart'; 
+import 'home_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,9 +28,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      // Logika login sementara
+      // Logika login sementara (bisa ganti dengan API call nantinya)
       print("Login Logic Triggered");
       print("Email: ${_emailController.text}");
+
+      // [Perbaikan: Navigasi ke HomeScreen saat validasi sukses]
+      // Menggunakan push agar tombol Logout (pop) di HomeScreen berfungsi kembali ke sini.
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     }
   }
 
