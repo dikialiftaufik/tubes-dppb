@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart'; 
 import 'register_screen.dart';
 import 'forgot_password_screen.dart'; 
+import 'main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,13 +26,15 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+ void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      // Logika login sementara
-      print("Login Logic Triggered");
-      print("Email: ${_emailController.text}");
+      // Perintah ini yang memindahkan user ke halaman MainScreen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
     }
-  }
+  } 
 
   // Fungsi Navigasi ke Register
   void _navigateToRegister() {
