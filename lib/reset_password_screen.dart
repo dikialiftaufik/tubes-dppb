@@ -70,7 +70,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Create New Password',
+                  'Buat Password Baru',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -79,7 +79,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your new password must be different from previous used passwords.',
+                  'Password baru harus berbeda dari yang sebelumnya digunakan.',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -92,7 +92,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   controller: _newPasswordController,
                   obscureText: !_isPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: 'New Password',
+                    labelText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
@@ -112,7 +112,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   controller: _confirmPasswordController,
                   obscureText: !_isConfirmPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Confirm New Password',
+                    labelText: 'Konfirmasi Password',
                     prefixIcon: const Icon(Icons.verified_user),
                     suffixIcon: IconButton(
                       icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
@@ -133,7 +133,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   child: ElevatedButton(
                     onPressed: _handleChangePassword,
                     style: AppStyles.primaryButtonStyle,
-                    child: const Text('Change Password'),
+                    child: const Text('Ubah Password'),
                   ),
                 ),
               ],

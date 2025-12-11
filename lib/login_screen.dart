@@ -4,6 +4,7 @@ import 'constants.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart'; 
 import 'home_screen.dart'; 
+import 'feedback_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -83,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Food delivery made simple',
+                    'Rasa Tanpa Batas',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
@@ -91,6 +92,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
+
+                  // ... di dalam Column children ...
+
+// Tombol Debug Sementara
+TextButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FeedbackScreen()),
+    );
+  },
+  child: const Text("DEBUG: Buka Feedback Screen", style: TextStyle(color: Colors.red)),
+),
+
+// ... kode lainnya ...
                   
                   // Email Field
                   TextFormField(
@@ -135,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.secondary,
                       ),
-                      child: const Text('Forgot Password?'),
+                      child: const Text('Lupa Password?'),
                     ),
                   ),
 
@@ -158,13 +174,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account?",
+                        "Belum punya akun?",
                         style: GoogleFonts.poppins(color: Colors.grey[700]),
                       ),
                       TextButton(
                         onPressed: _navigateToRegister,
                         child: Text(
-                          'Register',
+                          'Daftar Sekarang',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.bold,
                             color: AppColors.primary,

@@ -58,7 +58,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Forgot Password?',
+                    'Lupa Password?',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 28,
@@ -68,7 +68,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Enter your email address and we will send you a link to reset your password.',
+                    'Masukan alamat email Anda lalu kami akan mengirimkan tautan untuk mereset password Anda.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
@@ -99,7 +99,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: ElevatedButton(
                       onPressed: _handleSendLink,
                       style: AppStyles.primaryButtonStyle,
-                      child: const Text('Send Reset Link'),
+                      child: const Text('Kirim Tautan'),
                     ),
                   ),
                 ],
