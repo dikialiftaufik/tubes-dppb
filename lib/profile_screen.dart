@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
+import 'order_status_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -137,7 +138,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
               _buildReadOnlyField("Kata Sandi", passwordController, Icons.lock_outline, isObscure: true),
 
-              const SizedBox(height: 60),
+              const SizedBox(height: 32),
+              const Divider(color: Colors.grey, thickness: 0.5),
+              const SizedBox(height: 24),
+
+              // --- Tombol Pesanan Saya ---
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OrderStatusScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.receipt_long, size: 20),
+                  label: Text(
+                    "Pesanan Saya",
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
               const Divider(color: Colors.grey, thickness: 0.5),
               const SizedBox(height: 24),
 
