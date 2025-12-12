@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'login_screen.dart'; 
 import 'debug_menu_screen.dart';
+// TAMBAHKAN IMPORT INI:
+import 'main_screen.dart'; 
 
 void main() {
   runApp(const TheKomarsApp());
@@ -43,7 +45,9 @@ class TheKomarsApp extends StatelessWidget {
           style: AppStyles.primaryButtonStyle,
         ),
       ),
-      home: const DebugMenuScreen(), 
+      // UBAH BAGIAN INI:
+      // Arahkan ke MainScreen agar Navigasi Bawah langsung muncul
+      home: const MainScreen(), 
     );
   }
 }

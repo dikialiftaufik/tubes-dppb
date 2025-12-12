@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; 
 import 'constants.dart';
-import 'home_screen.dart';
+// Import halaman-halaman yang akan ditampilkan
+import 'home_screen.dart'; 
 import 'my_reservation_screen.dart';
-// Kita pakai placeholder untuk Menu karena belum ada filenya
 import 'menu_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
@@ -13,14 +14,15 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Default index 2 (Home) agar saat login langsung masuk ke tengah
+  // Mulai di index 2 agar langsung terbuka di Home
   int _selectedIndex = 2; 
 
+  // Daftar Halaman
   final List<Widget> _pages = [
-    const MenuScreen(),                          // Index 0: Menu
-    const MyReservationScreen(initialIndex: 0),  // Index 1: Reservasi (Tab Berlangsung)
-    const HomeScreen(),                          // Index 2: Home Screen
-    const MyReservationScreen(initialIndex: 1),  // Index 3: Riwayat (Tab History)
+    const MenuScreen(),                         // 0: Menu
+    const MyReservationScreen(initialIndex: 0), // 1: Reservasi
+    const HomeScreen(),                         // 2: HOME BARU ANDA
+    const MyReservationScreen(initialIndex: 1), // 3: Riwayat
   ];
 
   void _onItemTapped(int index) {
@@ -34,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       
-      // Body berubah sesuai tombol bawah
+      // Body ini akan berubah sesuai icon yang diklik
       body: _pages[_selectedIndex],
 
       // BOTTOM NAVIGATION BAR
@@ -51,12 +53,13 @@ class _MainScreenState extends State<MainScreen> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed, // Fixed agar 4 icon muat rapi
+          type: BottomNavigationBarType.fixed, 
           backgroundColor: Colors.white,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.grey,
           showUnselectedLabels: true,
-          selectedLabelStyle: AppStyles.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+          selectedLabelStyle: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.restaurant_menu),
@@ -71,7 +74,7 @@ class _MainScreenState extends State<MainScreen> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.history), // Icon Riwayat di sini
+              icon: Icon(Icons.history), 
               label: 'Riwayat',
             ),
           ],

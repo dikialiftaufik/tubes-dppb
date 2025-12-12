@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
+// Import halaman tujuan navigasi
 import 'reservation_form_screen.dart'; 
 import 'profile_screen.dart';
 import 'cart_screen.dart';
@@ -16,7 +17,8 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        // REVISI 1: Matikan tombol back otomatis
+        // PENTING: Matikan tombol back otomatis agar tidak muncul panah kembali
+        // karena halaman ini berada di dalam Tab Navigasi Utama
         automaticallyImplyLeading: false, 
         backgroundColor: AppColors.primary,
         title: Text(
@@ -24,9 +26,9 @@ class HomeScreen extends StatelessWidget {
           style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
-          // Ikon Pesan (Menu Lengkap)
+          // Tombol Menu Lengkap
           IconButton(
-            icon: const Icon(Icons.message, color: Colors.white),
+            icon: const Icon(Icons.message, color: Colors.white), // Ikon pesan sebagai 'Menu Lengkap' sesuai kode Anda
             tooltip: 'Menu Lengkap',
             onPressed: () {
               Navigator.push(
@@ -36,7 +38,7 @@ class HomeScreen extends StatelessWidget {
             },
           ),
           const SizedBox(width: 4),
-          // Ikon Keranjang
+          // Tombol Keranjang
           IconButton(
             icon: const Icon(Icons.shopping_cart, color: Colors.white),
             tooltip: 'Keranjang',
@@ -48,7 +50,7 @@ class HomeScreen extends StatelessWidget {
             },
           ),
           const SizedBox(width: 4),
-          // Ikon Profil
+          // Tombol Profil
           IconButton(
             icon: const Icon(Icons.person, color: Colors.white),
             tooltip: 'Profil Saya',
@@ -67,7 +69,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Sapaan
+            // Text Sapaan
             Text(
               'Mau makan enak\nhari ini?',
               style: GoogleFonts.poppins(
@@ -78,7 +80,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Banner Promo
+            // Banner Promo / Reservasi
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -131,55 +133,35 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             
-            // Grid Menu Favorit - 4 Menu Terbaik
+            // Grid Menu Favorit
             GridView.builder(
-              shrinkWrap: true,
+              shrinkWrap: true, // Agar GridView tidak scroll sendiri, tapi ikut parent
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.8, // Mengatur rasio tinggi/lebar kartu
               ),
               itemCount: 4,
               itemBuilder: (context, index) {
-                // Menu favorit: Sate Ayam, Sate Sapi, Tongseng Ayam, Tongseng Sapi
+                // Data Dummy untuk Menu Favorit
                 final favoriteMenus = [
                   MenuItem(
-                    id: '1',
-                    name: 'Sate Ayam',
-                    category: 'Sate',
-                    meat: 'Ayam',
-                    price: 35000,
-                    description: 'Sate ayam empuk dengan bumbu kacang yang lezat',
-                    imageUrl: 'assets/sate_ayam.png',
+                    id: '1', name: 'Sate Ayam', category: 'Sate', meat: 'Ayam',
+                    price: 35000, description: 'Sate ayam empuk dengan bumbu kacang.', imageUrl: 'assets/sate_ayam.png',
                   ),
                   MenuItem(
-                    id: '2',
-                    name: 'Sate Sapi',
-                    category: 'Sate',
-                    meat: 'Sapi',
-                    price: 45000,
-                    description: 'Sate daging sapi premium dengan bumbu tradisional',
-                    imageUrl: 'assets/sate_sapi.png',
+                    id: '2', name: 'Sate Sapi', category: 'Sate', meat: 'Sapi',
+                    price: 45000, description: 'Sate daging sapi premium.', imageUrl: 'assets/sate_sapi.png',
                   ),
                   MenuItem(
-                    id: '4',
-                    name: 'Tongseng Ayam',
-                    category: 'Tongseng',
-                    meat: 'Ayam',
-                    price: 32000,
-                    description: 'Tongseng ayam berkuah dengan sayuran segar',
-                    imageUrl: 'assets/tongseng_ayam.png',
+                    id: '4', name: 'Tongseng Ayam', category: 'Tongseng', meat: 'Ayam',
+                    price: 32000, description: 'Tongseng ayam kuah segar.', imageUrl: 'assets/tongseng_ayam.png',
                   ),
                   MenuItem(
-                    id: '5',
-                    name: 'Tongseng Sapi',
-                    category: 'Tongseng',
-                    meat: 'Sapi',
-                    price: 42000,
-                    description: 'Tongseng daging sapi empuk dengan kuah gurih',
-                    imageUrl: 'assets/tongseng_sapi.png',
+                    id: '5', name: 'Tongseng Sapi', category: 'Tongseng', meat: 'Sapi',
+                    price: 42000, description: 'Tongseng sapi kuah gurih.', imageUrl: 'assets/tongseng_sapi.png',
                   ),
                 ];
                 
@@ -208,28 +190,27 @@ class HomeScreen extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Image placeholder
-                        Container(
-                          width: double.infinity,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(12),
+                        // Placeholder Gambar
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
+                              ),
                             ),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              Icons.restaurant,
-                              size: 40,
-                              color: AppColors.primary,
+                            child: Center(
+                              child: Icon(
+                                Icons.restaurant,
+                                size: 40,
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
                         ),
-                        // Content
+                        // Informasi Menu
                         Padding(
                           padding: const EdgeInsets.all(8),
                           child: Column(
