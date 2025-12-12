@@ -4,6 +4,14 @@ import 'constants.dart';
 import 'models.dart';
 import 'checkout_screen.dart';
 
+// ==== FUNCTION FORMAT RUPIAH ====
+String formatRupiah(double number) {
+  return number.toStringAsFixed(0).replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (Match m) => '${m[1]}.',
+  );
+}
+
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -12,7 +20,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // Dummy cart data (PASTIKAN pakai lib/assets/)
+  // Dummy cart data
   final List<CartItem> cartItems = [
     CartItem(
       menuItem: MenuItem(
@@ -46,7 +54,7 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF3F4F6),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -116,28 +124,37 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  // ===============================
+  // CARD ITEM CART (SUDAH DIPERBAIKI)
+  // ===============================
   Widget _buildCartItem(int index) {
     final item = cartItems[index];
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.only(bottom: 14),
+      color: const Color.fromARGB(255, 207, 205, 193),
+      elevation: 6,
+      shadowColor: Colors.black26,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // **GAMBAR FIXED — PAKAI Image.asset**
+            // FOTO MENU
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 item.menuItem.imageUrl,
-                width: 80,
-                height: 80,
+                width: 85,
+                height: 85,
                 fit: BoxFit.cover,
                 errorBuilder: (ctx, _, __) => Container(
                   width: 80,
                   height: 80,
-                  color: Colors.grey[200],
+                  color: const Color.fromARGB(255, 208, 205, 196),
                   child: const Icon(Icons.broken_image, size: 30),
                 ),
               ),
@@ -145,7 +162,7 @@ class _CartScreenState extends State<CartScreen> {
 
             const SizedBox(width: 12),
 
-            // Informasi Item
+            // INFO MENU + QTY
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,59 +171,79 @@ class _CartScreenState extends State<CartScreen> {
                     item.menuItem.name,
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 15,
                       color: AppColors.secondary,
                     ),
                   ),
                   const SizedBox(height: 4),
+
                   Text(
-                    'Rp ${item.menuItem.price.toStringAsFixed(0)}/porsi',
+                    'Rp ${formatRupiah(item.menuItem.price)} / porsi',
                     style: GoogleFonts.poppins(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: Colors.grey[600],
                     ),
                   ),
-                  const SizedBox(height: 8),
 
-                  // Kontrol Quantity
+                  const SizedBox(height: 12),
+
+                  // TOMBOL QUANTITY (BARU & DIPERBESAR)
                   Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
                     decoration: BoxDecoration(
+                      color: const Color(0xFFF8F8F8),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          iconSize: 14,
-                          padding: EdgeInsets.zero,
-                          onPressed: item.quantity > 1
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: item.quantity > 1
                               ? () {
                                   setState(() {
                                     item.quantity--;
                                   });
                                 }
                               : null,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            item.quantity.toString(),
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            child: const Icon(
+                              Icons.remove,
+                              size: 22,
+                              color: Colors.black87,
                             ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          iconSize: 14,
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            item.quantity.toString(),
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
                             setState(() {
                               item.quantity++;
                             });
                           },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            child: const Icon(
+                              Icons.add,
+                              size: 22,
+                              color: Colors.black87,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -215,7 +252,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
 
-            // Harga total + tombol hapus
+            // HAPUS ITEM + HARGA TOTAL
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -228,10 +265,10 @@ class _CartScreenState extends State<CartScreen> {
                   },
                 ),
                 Text(
-                  'Rp ${item.totalPrice.toStringAsFixed(0)}',
+                  'Rp ${formatRupiah(item.totalPrice)}',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: 14,
                     color: AppColors.primary,
                   ),
                 ),
@@ -243,14 +280,17 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  // ======================
+  // CHECKOUT SECTION
+  // ======================
   Widget _buildCheckoutSection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFF8E1),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: const Color.fromARGB(255, 85, 72, 72).withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -272,7 +312,7 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                 ),
                 Text(
-                  'Rp ${totalPrice.toStringAsFixed(0)}',
+                  'Rp ${formatRupiah(totalPrice)}',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
