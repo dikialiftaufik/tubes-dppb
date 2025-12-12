@@ -4,7 +4,6 @@ import 'constants.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart'; 
 import 'home_screen.dart'; 
-import 'feedback_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,32 +26,45 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  // REVISI: Menambahkan async, unfocus, dan mounted check
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // Logika login sementara (bisa ganti dengan API call nantinya)
+      // 1. PENTING: Tutup keyboard agar tidak mengganggu transisi navigasi
+      FocusScope.of(context).unfocus();
+      
+      // Logika login sementara
       print("Login Logic Triggered");
       print("Email: ${_emailController.text}");
 
-      // [Perbaikan: Navigasi ke HomeScreen saat validasi sukses]
-      // Menggunakan push agar tombol Logout (pop) di HomeScreen berfungsi kembali ke sini.
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      // 2. Beri sedikit jeda agar keyboard sempat tertutup sempurna (opsional tapi membantu)
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // 3. Pastikan widget masih aktif sebelum navigasi (mencegah error 'context' tidak valid)
+      if (!mounted) return;
+
+      // 4. Navigasi ke HomeScreen
+      try {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } catch (e) {
+        print("Error Navigasi: $e");
+      }
     }
   }
 
-  // Fungsi Navigasi ke Register
   void _navigateToRegister() {
+    FocusScope.of(context).unfocus(); // Tutup keyboard juga saat pindah ke register
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const RegisterScreen()),
     );
   }
 
-  // Fungsi Navigasi ke Forgot Password 
   void _navigateToForgotPassword() {
-    print("Navigating to Forgot Password Screen..."); // Log untuk debugging
+    FocusScope.of(context).unfocus(); // Tutup keyboard
+    print("Navigating to Forgot Password Screen...");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
@@ -92,21 +104,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-
-                  // ... di dalam Column children ...
-
-// Tombol Debug Sementara
-TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const FeedbackScreen()),
-    );
-  },
-  child: const Text("DEBUG: Buka Feedback Screen", style: TextStyle(color: Colors.red)),
-),
-
-// ... kode lainnya ...
                   
                   // Email Field
                   TextFormField(
@@ -146,7 +143,6 @@ TextButton(
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      // Pastikan memanggil fungsi _navigateToForgotPassword
                       onPressed: _navigateToForgotPassword, 
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.secondary,

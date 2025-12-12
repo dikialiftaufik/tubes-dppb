@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'login_screen.dart'; 
+import 'debug_menu_screen.dart';
 
 void main() {
   runApp(const TheKomarsApp());
@@ -42,7 +43,7 @@ class TheKomarsApp extends StatelessWidget {
           style: AppStyles.primaryButtonStyle,
         ),
       ),
-      home: const LoginScreen(), 
+      home: const DebugMenuScreen(), 
     );
   }
 }

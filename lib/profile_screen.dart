@@ -4,6 +4,8 @@ import 'constants.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import 'order_status_screen.dart';
+import 'home_screen.dart';
+import 'feedback_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,9 +20,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _email = "diki@example.com";
   String _phone = "+62 812 3456 7890";
   String _password = "password123";
-  bool _hasCustomPhoto = false; // Simulasi status foto profil
+  bool _hasCustomPhoto = false; 
 
-  // Fungsi untuk navigasi ke Edit dan MENUNGGU data balik
+  // Index untuk Bottom Navigation Bar (2 = Profil)
+  int _selectedIndex = 2;
+
   void _navigateToEditProfile() async {
     final result = await Navigator.push(
       context,
@@ -34,25 +38,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
 
-    // Jika ada data yang dikembalikan (User menekan Simpan)
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
         _name = result['name'];
         _email = result['email'];
         _phone = result['phone'];
         _password = result['password'];
-        
-        // Cek jika ada flag foto berubah
         if (result['photoUpdated'] == true) {
-          _hasCustomPhoto = !_hasCustomPhoto; // Toggle simulasi foto
+          _hasCustomPhoto = !_hasCustomPhoto;
         }
       });
     }
   }
 
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    if (index == 0) {
+      // Ke Home
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (route) => false,
+      );
+    } else if (index == 1) {
+      // Ke Masukan/Feedback
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FeedbackScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Controller hanya untuk menampilkan teks (Read Only)
     final nameController = TextEditingController(text: _name);
     final emailController = TextEditingController(text: _email);
     final phoneController = TextEditingController(text: _phone);
@@ -65,9 +84,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         centerTitle: false,
         titleSpacing: 0,
+        automaticallyImplyLeading: false, // Gunakan Bottom Bar
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          ),
         ),
         title: Text(
           "Profil Saya",
@@ -93,7 +117,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundColor: _hasCustomPhoto ? AppColors.secondary : Colors.grey,
-                  // Simulasi perubahan foto: Jika diedit, icon berubah jadi wajah
                   child: Icon(
                     _hasCustomPhoto ? Icons.face : Icons.person,
                     size: 60,
@@ -107,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: _navigateToEditProfile, // Panggil fungsi async di atas
+                  onPressed: _navigateToEditProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -203,6 +226,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: Colors.grey,
+        showUnselectedLabels: true,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Beranda',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.feedback),
+            label: 'Masukan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
       ),
     );
   }

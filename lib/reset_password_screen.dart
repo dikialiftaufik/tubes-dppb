@@ -30,7 +30,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       // Show Success Message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Password Changed Successfully'),
+          content: Text('Password Berhasil Diubah'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
