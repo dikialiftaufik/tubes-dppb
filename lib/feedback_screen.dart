@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
-import 'home_screen.dart';
-import 'profile_screen.dart';
+// Home Screen & Profile Screen tidak perlu di-import lagi untuk navigasi di sini
+// karena navigasi sudah diurus oleh MainScreen.
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -19,9 +19,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   final TextEditingController _detailController = TextEditingController();
   bool _isAnonymous = false;
   
-  // Index untuk Bottom Navigation Bar (1 = Masukan)
-  int _selectedIndex = 1;
-
+  // Data Kategori
   final List<String> _categories = [
     "Pelayanan",
     "Fasilitas",
@@ -34,25 +32,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   void dispose() {
     _detailController.dispose();
     super.dispose();
-  }
-
-  void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
-
-    if (index == 0) {
-      // Ke Home
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-        (route) => false,
-      );
-    } else if (index == 2) {
-      // Ke Profil
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileScreen()),
-      );
-    }
   }
 
   void _handleSubmit() {
@@ -74,7 +53,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(); // Tutup Dialog
-                  Navigator.of(context).pop(); // Kembali (bisa disesuaikan jika ingin tetap di halaman)
+                  // Form bisa di-reset di sini jika mau
+                  setState(() {
+                    _detailController.clear();
+                    _selectedCategory = null;
+                    _isAnonymous = false;
+                  });
                 },
                 child: Text(
                   "Tutup",
@@ -95,21 +79,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      
+      // APP BAR
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        titleSpacing: 0,
-        automaticallyImplyLeading: false, // Matikan back button default karena ada bottom bar
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
-          // Jika user menekan back manual, bisa diarahkan ke Home atau pop
-          onPressed: () => Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-            (route) => false,
-          ),
-        ),
+        titleSpacing: 24, // Memberi jarak agar sejajar dengan padding body
+        automaticallyImplyLeading: false, // Tidak perlu tombol back karena ini Tab Utama
         title: Text(
           "Beri Masukan",
           style: GoogleFonts.poppins(
@@ -119,6 +96,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ),
         ),
       ),
+
+      // BODY
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -256,27 +235,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.feedback),
-            label: 'Masukan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
       ),
     );
   }

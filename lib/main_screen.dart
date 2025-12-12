@@ -5,6 +5,8 @@ import 'constants.dart';
 import 'home_screen.dart'; 
 import 'my_reservation_screen.dart';
 import 'menu_screen.dart'; 
+// 1. IMPORT FILE FEEDBACK SCREEN (Pastikan file ini sudah dibuat)
+import 'feedback_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -21,8 +23,9 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const MenuScreen(),                         // 0: Menu
     const MyReservationScreen(initialIndex: 0), // 1: Reservasi
-    const HomeScreen(),                         // 2: HOME BARU ANDA
+    const HomeScreen(),                         // 2: HOME
     const MyReservationScreen(initialIndex: 1), // 3: Riwayat
+    const FeedbackScreen(),                     // 4: FEEDBACK (Baru)
   ];
 
   void _onItemTapped(int index) {
@@ -53,13 +56,13 @@ class _MainScreenState extends State<MainScreen> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed, 
+          type: BottomNavigationBarType.fixed, // Fixed agar icon tetap rapi meski ada 5
           backgroundColor: Colors.white,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.grey,
           showUnselectedLabels: true,
-          selectedLabelStyle: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
-          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
+          selectedLabelStyle: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold), // Sedikit diperkecil fontnya agar muat 5 menu
+          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 10),
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.restaurant_menu),
@@ -76,6 +79,10 @@ class _MainScreenState extends State<MainScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.history), 
               label: 'Riwayat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.reviews), // Atau bisa pakai Icons.feedback
+              label: 'Feedback',
             ),
           ],
         ),
