@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
-// Home Screen & Profile Screen tidak perlu di-import lagi untuk navigasi di sini
-// karena navigasi sudah diurus oleh MainScreen.
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -14,12 +12,10 @@ class FeedbackScreen extends StatefulWidget {
 class _FeedbackScreenState extends State<FeedbackScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  // State Variables
   String? _selectedCategory;
   final TextEditingController _detailController = TextEditingController();
   bool _isAnonymous = false;
   
-  // Data Kategori
   final List<String> _categories = [
     "Pelayanan",
     "Fasilitas",
@@ -41,32 +37,19 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text(
-              "Masukan Diterima",
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-            ),
-            content: Text(
-              "Terima kasih telah membantu kami menjadi lebih baik.",
-              style: GoogleFonts.poppins(),
-            ),
+            title: Text("Masukan Diterima", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            content: Text("Terima kasih telah membantu kami menjadi lebih baik.", style: GoogleFonts.poppins()),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // Tutup Dialog
-                  // Form bisa di-reset di sini jika mau
+                  Navigator.of(context).pop();
                   setState(() {
                     _detailController.clear();
                     _selectedCategory = null;
                     _isAnonymous = false;
                   });
                 },
-                child: Text(
-                  "Tutup",
-                  style: GoogleFonts.poppins(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
+                child: Text("Tutup", style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.bold)),
               ),
             ],
           );
@@ -80,19 +63,20 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       
-      // APP BAR
+      // [PERBAIKAN KONSISTENSI]
+      // Mengubah AppBar agar sesuai dengan gaya HomeScreen (Warna Primary, Teks Putih)
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false, // Konsisten: tidak ada tombol back (diurus MainScreen)
+        backgroundColor: AppColors.primary, // Konsisten: Warna background Primary
         elevation: 0,
         centerTitle: false,
-        titleSpacing: 24, // Memberi jarak agar sejajar dengan padding body
-        automaticallyImplyLeading: false, // Tidak perlu tombol back karena ini Tab Utama
+        titleSpacing: 24,
         title: Text(
           "Beri Masukan",
           style: GoogleFonts.poppins(
-            color: AppColors.secondary,
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
+            color: Colors.white, // Konsisten: Teks Putih
+            fontWeight: FontWeight.bold, // Konsisten: Font Weight
+            fontSize: 20, // Konsisten: Ukuran disesuaikan
           ),
         ),
       ),
@@ -174,11 +158,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey[400]!,
-                        style: BorderStyle.solid,
-                        width: 1.5,
-                      ),
+                      border: Border.all(color: Colors.grey[400]!, style: BorderStyle.solid, width: 1.5),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -187,10 +167,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         const SizedBox(height: 8),
                         Text(
                           "Upload Bukti Foto (Opsional)",
-                          style: GoogleFonts.poppins(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
+                          style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
                         ),
                       ],
                     ),
@@ -204,21 +181,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   activeColor: AppColors.primary,
                   title: Text(
                     "Kirim sebagai anonim",
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.secondary
-                    ),
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w500, color: AppColors.secondary),
                   ),
                   subtitle: Text(
                     "Identitas Anda tidak akan ditampilkan.",
                     style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
                   ),
                   value: _isAnonymous,
-                  onChanged: (bool value) {
-                    setState(() {
-                      _isAnonymous = value;
-                    });
-                  },
+                  onChanged: (bool value) => setState(() => _isAnonymous = value),
                 ),
                 const SizedBox(height: 32),
 

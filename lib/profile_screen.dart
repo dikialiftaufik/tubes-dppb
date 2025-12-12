@@ -4,8 +4,6 @@ import 'constants.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import 'order_status_screen.dart';
-import 'home_screen.dart';
-import 'feedback_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,16 +13,14 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // State Variables 
+  // --- State Variables ---
   String _name = "Diki Alif Taufik";
   String _email = "diki@example.com";
   String _phone = "+62 812 3456 7890";
   String _password = "password123";
   bool _hasCustomPhoto = false; 
 
-  // Index untuk Bottom Navigation Bar (2 = Profil)
-  int _selectedIndex = 2;
-
+  // --- Logic Edit Profil ---
   void _navigateToEditProfile() async {
     final result = await Navigator.push(
       context,
@@ -38,6 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
 
+    // Memperbarui data jika user menyimpan perubahan
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
         _name = result['name'];
@@ -51,27 +48,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
-
-    if (index == 0) {
-      // Ke Home
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-        (route) => false,
-      );
-    } else if (index == 1) {
-      // Ke Masukan/Feedback
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FeedbackScreen()),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Controller untuk menampilkan data (Read-only di halaman ini)
     final nameController = TextEditingController(text: _name);
     final emailController = TextEditingController(text: _email);
     final phoneController = TextEditingController(text: _phone);
@@ -79,19 +58,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      
+      // --- APP BAR ---
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-        automaticallyImplyLeading: false, // Gunakan Bottom Bar
+        automaticallyImplyLeading: false, 
+        // Tombol Back Manual
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
-          onPressed: () => Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-            (route) => false,
-          ),
+          onPressed: () => Navigator.pop(context), 
         ),
         title: Text(
           "Profil Saya",
@@ -102,12 +80,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
+
+      // --- BODY ---
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 10, 24, 40),
           child: Column(
             children: [
-              // --- Avatar Section ---
+              // 1. Avatar Section
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
@@ -126,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 16),
 
-              // --- Tombol Edit Profil ---
+              // 2. Tombol Edit Profil (Kecil di bawah foto)
               SizedBox(
                 height: 36,
                 child: ElevatedButton(
@@ -152,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               const SizedBox(height: 32),
 
-              // --- Form Data (Read Only) ---
+              // 3. Form Data (Read Only)
               _buildReadOnlyField("Nama Lengkap", nameController, Icons.person_outline),
               const SizedBox(height: 16),
               _buildReadOnlyField("Email", emailController, Icons.email_outlined),
@@ -165,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Divider(color: Colors.grey, thickness: 0.5),
               const SizedBox(height: 24),
 
-              // --- Tombol Pesanan Saya ---
+              // 4. Tombol Pesanan Saya
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -197,11 +177,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Divider(color: Colors.grey, thickness: 0.5),
               const SizedBox(height: 24),
 
-              // --- Tombol Keluar ---
+              // 5. Tombol Keluar
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
+                    // Logika Logout: Hapus stack navigasi dan kembali ke Login
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -227,30 +208,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.feedback),
-            label: 'Masukan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-      ),
+      // BOTTOM NAVIGATION BAR SUDAH DIHAPUS
     );
   }
 
+  // Widget Helper untuk Field Read-Only
   Widget _buildReadOnlyField(String label, TextEditingController controller, IconData icon, {bool isObscure = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         TextFormField(
           controller: controller,
-          readOnly: true,
+          readOnly: true, // Tidak bisa diedit langsung di sini
           obscureText: isObscure,
           style: GoogleFonts.poppins(
             color: AppColors.secondary,
