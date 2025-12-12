@@ -12,7 +12,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // Dummy cart data
+  // Dummy cart data (PASTIKAN pakai lib/assets/)
   final List<CartItem> cartItems = [
     CartItem(
       menuItem: MenuItem(
@@ -22,7 +22,7 @@ class _CartScreenState extends State<CartScreen> {
         meat: 'Ayam',
         price: 35000,
         description: 'Sate ayam empuk dengan bumbu kacang yang lezat',
-        imageUrl: 'assets/sate_ayam.png',
+        imageUrl: 'lib/assets/sateayam.jpg',
       ),
       quantity: 2,
     ),
@@ -34,7 +34,7 @@ class _CartScreenState extends State<CartScreen> {
         meat: 'Sapi',
         price: 42000,
         description: 'Tongseng daging sapi empuk dengan kuah gurih',
-        imageUrl: 'assets/tongseng_sapi.png',
+        imageUrl: 'lib/assets/tongsengsapi.jpg',
       ),
       quantity: 1,
     ),
@@ -50,8 +50,6 @@ class _CartScreenState extends State<CartScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
-        titleSpacing: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
           onPressed: () => Navigator.pop(context),
@@ -69,7 +67,6 @@ class _CartScreenState extends State<CartScreen> {
           ? _buildEmptyCart()
           : Column(
               children: [
-                // Cart Items List
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
@@ -81,7 +78,6 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   ),
                 ),
-                // Summary & Checkout
                 _buildCheckoutSection(),
               ],
             ),
@@ -122,32 +118,34 @@ class _CartScreenState extends State<CartScreen> {
 
   Widget _buildCartItem(int index) {
     final item = cartItems[index];
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image placeholder
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 40,
-                  color: AppColors.primary,
+            // **GAMBAR FIXED — PAKAI Image.asset**
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                item.menuItem.imageUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, _, __) => Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.broken_image, size: 30),
                 ),
               ),
             ),
+
             const SizedBox(width: 12),
-            // Item Details
+
+            // Informasi Item
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,60 +167,46 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Quantity Controls
+
+                  // Kontrol Quantity
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey[300]!),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: IconButton(
-                            onPressed: item.quantity > 1
-                                ? () {
-                                    setState(() {
-                                      item.quantity--;
-                                    });
-                                  }
-                                : null,
-                            icon: const Icon(Icons.remove),
-                            iconSize: 14,
-                            color: AppColors.primary,
-                            disabledColor: Colors.grey[300],
-                            padding: EdgeInsets.zero,
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          iconSize: 14,
+                          padding: EdgeInsets.zero,
+                          onPressed: item.quantity > 1
+                              ? () {
+                                  setState(() {
+                                    item.quantity--;
+                                  });
+                                }
+                              : null,
                         ),
-                        SizedBox(
-                          width: 28,
-                          child: Center(
-                            child: Text(
-                              item.quantity.toString(),
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.secondary,
-                              ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            item.quantity.toString(),
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                item.quantity++;
-                              });
-                            },
-                            icon: const Icon(Icons.add),
-                            iconSize: 14,
-                            color: AppColors.primary,
-                            padding: EdgeInsets.zero,
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          iconSize: 14,
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            setState(() {
+                              item.quantity++;
+                            });
+                          },
                         ),
                       ],
                     ),
@@ -230,22 +214,19 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
             ),
-            // Total & Delete
+
+            // Harga total + tombol hapus
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red),
                   onPressed: () {
                     setState(() {
                       cartItems.removeAt(index);
                     });
                   },
-                  icon: const Icon(Icons.close),
-                  iconSize: 20,
-                  color: Colors.red,
-                  padding: EdgeInsets.zero,
                 ),
-                const SizedBox(height: 4),
                 Text(
                   'Rp ${item.totalPrice.toStringAsFixed(0)}',
                   style: GoogleFonts.poppins(
@@ -264,6 +245,7 @@ class _CartScreenState extends State<CartScreen> {
 
   Widget _buildCheckoutSection() {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -274,13 +256,10 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
       child: SafeArea(
         top: false,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Summary
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -303,9 +282,9 @@ class _CartScreenState extends State<CartScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Checkout Button
             SizedBox(
               height: 50,
+              width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -318,10 +297,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   );
                 },
-                style: AppStyles.primaryButtonStyle.copyWith(
-                  minimumSize:
-                      MaterialStateProperty.all(const Size.fromHeight(50)),
-                ),
+                style: AppStyles.primaryButtonStyle,
                 child: Text(
                   'Lanjut ke Pembayaran',
                   style: GoogleFonts.poppins(

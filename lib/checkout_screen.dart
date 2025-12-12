@@ -19,7 +19,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   String _selectedPaymentMethod = 'transfer'; // 'transfer' atau 'qris'
-  String _selectedAddress = 'Jl. Merdeka No. 123, Yogyakarta'; // Default address
+  String _selectedAddress = 'Jl. Bojongsoang No. 123, Kab Bandung'; // Default address
 
   @override
   Widget build(BuildContext context) {
