@@ -124,15 +124,15 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  // ===============================
-  // CARD ITEM CART (SUDAH DIPERBAIKI)
-  // ===============================
+  // ===========================
+  // CART ITEM (SUDAH DIPERBAIKI)
+  // ===========================
   Widget _buildCartItem(int index) {
     final item = cartItems[index];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
-      color: const Color.fromARGB(255, 207, 205, 193),
+      color: const Color(0xFFFFF4D3), // lebih soft dari sebelumnya
       elevation: 6,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(
@@ -151,12 +151,6 @@ class _CartScreenState extends State<CartScreen> {
                 width: 85,
                 height: 85,
                 fit: BoxFit.cover,
-                errorBuilder: (ctx, _, __) => Container(
-                  width: 80,
-                  height: 80,
-                  color: const Color.fromARGB(255, 208, 205, 196),
-                  child: const Icon(Icons.broken_image, size: 30),
-                ),
               ),
             ),
 
@@ -176,7 +170,6 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-
                   Text(
                     'Rp ${formatRupiah(item.menuItem.price)} / porsi',
                     style: GoogleFonts.poppins(
@@ -184,20 +177,21 @@ class _CartScreenState extends State<CartScreen> {
                       color: Colors.grey[600],
                     ),
                   ),
-
                   const SizedBox(height: 12),
 
-                  // TOMBOL QUANTITY (BARU & DIPERBESAR)
+                  // ==========================
+                  // QUANTITY TIDAK MELEBAR
+                  // ==========================
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8F8F8),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey[300]!),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Tombol -
                         InkWell(
                           borderRadius: BorderRadius.circular(8),
                           onTap: item.quantity > 1
@@ -208,27 +202,28 @@ class _CartScreenState extends State<CartScreen> {
                                 }
                               : null,
                           child: Container(
-                            padding: const EdgeInsets.all(6),
-                            child: const Icon(
-                              Icons.remove,
-                              size: 22,
-                              color: Colors.black87,
-                            ),
+                            width: 32,
+                            height: 32,
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.remove, size: 20),
                           ),
                         ),
 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        // Angka qty
+                        Container(
+                          width: 35,
+                          alignment: Alignment.center,
                           child: Text(
                             item.quantity.toString(),
                             style: GoogleFonts.poppins(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
                             ),
                           ),
                         ),
 
+                        // Tombol +
                         InkWell(
                           borderRadius: BorderRadius.circular(8),
                           onTap: () {
@@ -237,12 +232,10 @@ class _CartScreenState extends State<CartScreen> {
                             });
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(6),
-                            child: const Icon(
-                              Icons.add,
-                              size: 22,
-                              color: Colors.black87,
-                            ),
+                            width: 32,
+                            height: 32,
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.add, size: 20),
                           ),
                         ),
                       ],
@@ -252,7 +245,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
 
-            // HAPUS ITEM + HARGA TOTAL
+            // HAPUS ITEM + TOTAL HARGA
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -287,10 +280,10 @@ class _CartScreenState extends State<CartScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
+        color: const Color(0xFFFFF4D3),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 85, 72, 72).withOpacity(0.1),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -321,7 +314,9 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 16),
+
             SizedBox(
               height: 50,
               width: double.infinity,
