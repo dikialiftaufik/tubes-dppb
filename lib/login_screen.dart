@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart'; 
 import 'register_screen.dart';
 import 'forgot_password_screen.dart'; 
-import 'home_screen.dart'; 
+// REVISI: Import MainScreen, bukan HomeScreen
+import 'main_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,36 +27,27 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // REVISI: Menambahkan async, unfocus, dan mounted check
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // 1. PENTING: Tutup keyboard agar tidak mengganggu transisi navigasi
-      FocusScope.of(context).unfocus();
+      FocusScope.of(context).unfocus(); // Tutup keyboard
       
-      // Logika login sementara
-      print("Login Logic Triggered");
-      print("Email: ${_emailController.text}");
+      // Simulasi loading sebentar
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      // 2. Beri sedikit jeda agar keyboard sempat tertutup sempurna (opsional tapi membantu)
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      // 3. Pastikan widget masih aktif sebelum navigasi (mencegah error 'context' tidak valid)
       if (!mounted) return;
 
-      // 4. Navigasi ke HomeScreen
-      try {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } catch (e) {
-        print("Error Navigasi: $e");
-      }
+      // REVISI PENTING:
+      // Pindah ke MainScreen (yang punya Bottom Nav Bar), bukan HomeScreen.
+      // Gunakan pushReplacement agar user tidak bisa back ke halaman login.
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
     }
   }
 
   void _navigateToRegister() {
-    FocusScope.of(context).unfocus(); // Tutup keyboard juga saat pindah ke register
+    FocusScope.of(context).unfocus(); 
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const RegisterScreen()),
@@ -63,8 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _navigateToForgotPassword() {
-    FocusScope.of(context).unfocus(); // Tutup keyboard
-    print("Navigating to Forgot Password Screen...");
+    FocusScope.of(context).unfocus(); 
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
