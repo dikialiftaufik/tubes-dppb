@@ -18,7 +18,7 @@ class MenuCatalogScreen extends StatelessWidget {
         meat: 'Ayam',
         price: 35000,
         description: 'Sate ayam empuk dengan bumbu kacang yang lezat',
-        imageUrl: 'assets/sate_ayam.png',
+        imageUrl: 'lib/assets/sateayam.jpg',
       ),
       MenuItem(
         id: '2',
@@ -27,7 +27,7 @@ class MenuCatalogScreen extends StatelessWidget {
         meat: 'Sapi',
         price: 45000,
         description: 'Sate daging sapi premium dengan bumbu tradisional',
-        imageUrl: 'assets/sate_sapi.png',
+        imageUrl: 'lib/assets/satesapi.jpg',
       ),
       MenuItem(
         id: '3',
@@ -36,7 +36,7 @@ class MenuCatalogScreen extends StatelessWidget {
         meat: 'Kambing',
         price: 50000,
         description: 'Sate kambing empuk dengan aroma harum',
-        imageUrl: 'assets/sate_kambing.png',
+        imageUrl: 'lib/assets/satekambing.jpg',
       ),
       MenuItem(
         id: '4',
@@ -45,7 +45,7 @@ class MenuCatalogScreen extends StatelessWidget {
         meat: 'Ayam',
         price: 32000,
         description: 'Tongseng ayam berkuah dengan sayuran segar',
-        imageUrl: 'assets/tongseng_ayam.png',
+        imageUrl: 'lib/assets/tongsengayam.jpg',
       ),
       MenuItem(
         id: '5',
@@ -54,7 +54,7 @@ class MenuCatalogScreen extends StatelessWidget {
         meat: 'Sapi',
         price: 42000,
         description: 'Tongseng daging sapi empuk dengan kuah gurih',
-        imageUrl: 'assets/tongseng_sapi.png',
+        imageUrl: 'lib/assets/tongsengsapi.jpg',
       ),
       MenuItem(
         id: '6',
@@ -63,7 +63,7 @@ class MenuCatalogScreen extends StatelessWidget {
         meat: 'Kambing',
         price: 48000,
         description: 'Tongseng kambing dengan rempah-rempah pilihan',
-        imageUrl: 'assets/tongseng_kambing.png',
+        imageUrl: 'lib/assets/tongsengkambing.jpg',
       ),
     ];
 
@@ -123,26 +123,21 @@ class MenuCatalogScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Image placeholder - full height
-            Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
+            // IMAGE SEBENARNYA
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 60,
-                  color: AppColors.primary,
-                ),
+              child: Image.asset(
+                item.imageUrl,
+                width: 140,
+                height: 140,
+                fit: BoxFit.cover,
               ),
             ),
-            // Info section - full width remaining
+
+            // Info section
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -198,6 +193,7 @@ class MenuCatalogScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
+
                     // Description
                     Text(
                       item.description,
@@ -210,6 +206,7 @@ class MenuCatalogScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
+
                     // Price & Arrow
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
