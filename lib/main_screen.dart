@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; 
 import 'constants.dart';
-// Import halaman-halaman yang akan ditampilkan
 import 'home_screen.dart'; 
 import 'my_reservation_screen.dart';
 import 'menu_screen.dart'; 
-// 1. IMPORT FILE FEEDBACK SCREEN (Pastikan file ini sudah dibuat)
 import 'feedback_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
@@ -16,16 +14,14 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Mulai di index 2 agar langsung terbuka di Home
   int _selectedIndex = 2; 
 
-  // Daftar Halaman
   final List<Widget> _pages = [
-    const MenuScreen(),                         // 0: Menu
-    const MyReservationScreen(initialIndex: 0), // 1: Reservasi
-    const HomeScreen(),                         // 2: HOME
-    const MyReservationScreen(initialIndex: 1), // 3: Riwayat
-    const FeedbackScreen(),                     // 4: FEEDBACK (Baru)
+    const MenuScreen(),                         
+    const MyReservationScreen(initialIndex: 0), 
+    const HomeScreen(),                         
+    const MyReservationScreen(initialIndex: 1), 
+    const FeedbackScreen(),                     
   ];
 
   void _onItemTapped(int index) {
@@ -39,10 +35,8 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       
-      // Body ini akan berubah sesuai icon yang diklik
       body: _pages[_selectedIndex],
 
-      // BOTTOM NAVIGATION BAR
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -56,12 +50,12 @@ class _MainScreenState extends State<MainScreen> {
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed, // Fixed agar icon tetap rapi meski ada 5
+          type: BottomNavigationBarType.fixed, 
           backgroundColor: Colors.white,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.grey,
           showUnselectedLabels: true,
-          selectedLabelStyle: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold), // Sedikit diperkecil fontnya agar muat 5 menu
+          selectedLabelStyle: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold), 
           unselectedLabelStyle: GoogleFonts.poppins(fontSize: 10),
           items: const [
             BottomNavigationBarItem(
@@ -81,7 +75,7 @@ class _MainScreenState extends State<MainScreen> {
               label: 'Riwayat',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.reviews), // Atau bisa pakai Icons.feedback
+              icon: Icon(Icons.reviews), 
               label: 'Feedback',
             ),
           ],

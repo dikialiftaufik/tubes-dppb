@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
-import 'reset_password_screen.dart'; // Import agar bisa navigasi ke Reset Password
+import 'reset_password_screen.dart'; 
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -111,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: ElevatedButton(
                     onPressed: _handleForgotPassword,
                     style: AppStyles.primaryButtonStyle,
-                    child: const Text('Kirim Link'),
+                    child: const Text('Lanjutkan'),
                   ),
                 ),
               ],
