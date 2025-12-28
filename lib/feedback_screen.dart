@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'constants.dart';
 
 class FeedbackScreen extends StatefulWidget {
@@ -12,10 +14,15 @@ class FeedbackScreen extends StatefulWidget {
 class _FeedbackScreenState extends State<FeedbackScreen> {
   final _formKey = GlobalKey<FormState>();
   
+  // State Variables
   String? _selectedCategory;
   final TextEditingController _detailController = TextEditingController();
   bool _isAnonymous = false;
   
+  // State untuk Foto
+  XFile? _pickedImage; 
+  final ImagePicker _picker = ImagePicker();
+
   final List<String> _categories = [
     "Pelayanan",
     "Fasilitas",
@@ -30,6 +37,44 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     super.dispose();
   }
 
+  // --- LOGIKA UPLOAD FOTO ---
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _pickedImage = image;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Foto berhasil dipilih")),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Gagal mengambil gambar: $e"),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      _pickedImage = null;
+    });
+  }
+
+  // --- LOGIKA SUBMIT ---
   void _handleSubmit() {
     if (_formKey.currentState!.validate()) {
       showDialog(
@@ -37,8 +82,44 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("Masukan Diterima", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-            content: Text("Terima kasih telah membantu kami menjadi lebih baik.", style: GoogleFonts.poppins()),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Column(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 50),
+                const SizedBox(height: 12),
+                Text("Masukan Diterima", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Terima kasih telah membantu kami menjadi lebih baik.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(),
+                ),
+                const SizedBox(height: 12),
+                if (_pickedImage != null)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.image, size: 16, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Text(
+                          "1 Foto dilampirkan",
+                          style: GoogleFonts.poppins(fontSize: 12, color: Colors.green[800]),
+                        ),
+                      ],
+                    ),
+                  )
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () {
@@ -47,6 +128,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     _detailController.clear();
                     _selectedCategory = null;
                     _isAnonymous = false;
+                    _pickedImage = null;
                   });
                 },
                 child: Text("Tutup", style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.bold)),
@@ -63,7 +145,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       
-      // AppBar Konsisten dengan gaya HomeScreen
       appBar: AppBar(
         automaticallyImplyLeading: false, 
         backgroundColor: AppColors.primary, 
@@ -80,13 +161,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         ),
       ),
 
-      // BODY menggunakan ListView
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(24.0),
-            // Fitur UX: Keyboard otomatis tertutup saat user men-scroll layar
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             children: [
               Text(
@@ -109,11 +188,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
               // --- 1. Category Dropdown ---
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "Pilih Kategori",
-                  prefixIcon: Icon(Icons.category_outlined),
-                  border: OutlineInputBorder(),
+                  labelStyle: GoogleFonts.poppins(),
+                  prefixIcon: const Icon(Icons.category_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
+                dropdownColor: Colors.white,
                 value: _selectedCategory,
                 items: _categories.map((category) {
                   return DropdownMenuItem(
@@ -130,14 +212,21 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               TextFormField(
                 controller: _detailController,
                 maxLines: 5,
-                decoration: const InputDecoration(
-                  hintText: "Ceritakan pengalamanmu...",
-                  border: OutlineInputBorder(),
+                style: GoogleFonts.poppins(),
+                decoration: InputDecoration(
+                  hintText: "Ceritakan pengalamanmu secara detail...",
+                  hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
+                  labelText: "Detail Masukan",
+                  labelStyle: GoogleFonts.poppins(),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   alignLabelWithHint: true,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return "Detail masukan tidak boleh kosong";
+                  }
+                  if (value.trim().length < 10) {
+                    return "Mohon isi detail lebih lengkap (min. 10 karakter)";
                   }
                   return null;
                 },
@@ -145,33 +234,69 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               const SizedBox(height: 20),
 
               // --- 3. Photo Evidence UI ---
-              InkWell(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Fitur Upload Foto (Coming Soon)")),
-                  );
-                },
-                child: Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[400]!, style: BorderStyle.solid, width: 1.5),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_a_photo_outlined, size: 32, color: Colors.grey[600]),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Upload Bukti Foto (Opsional)",
-                        style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
+              if (_pickedImage == null) 
+                InkWell(
+                  onTap: _pickImage, 
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    height: 120,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey[400]!, 
+                        style: BorderStyle.solid, // PERBAIKAN: Menggunakan solid
+                        width: 1.5
                       ),
-                    ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_outlined, size: 32, color: Colors.grey[600]),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Ketuk untuk Upload Foto (Opsional)",
+                          style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
+                )
+              else 
+                Stack(
+                  children: [
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                        image: DecorationImage(
+                          image: FileImage(File(_pickedImage!.path)), 
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: InkWell(
+                        onTap: _removeImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                          ),
+                          child: const Icon(Icons.close, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                
               const SizedBox(height: 20),
 
               // --- 4. Privacy Option ---
@@ -183,7 +308,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w500, color: AppColors.secondary),
                 ),
                 subtitle: Text(
-                  "Identitas Anda tidak akan ditampilkan.",
+                  "Identitas Anda tidak akan ditampilkan ke publik.",
                   style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
                 ),
                 value: _isAnonymous,
@@ -197,7 +322,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 child: ElevatedButton(
                   onPressed: _handleSubmit,
                   style: AppStyles.primaryButtonStyle,
-                  child: const Text("Kirim Masukan"),
+                  child: Text(
+                    "Kirim Masukan",
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],

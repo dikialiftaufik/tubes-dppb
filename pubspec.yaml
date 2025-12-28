@@ -15,6 +15,7 @@ dependencies:
 
   # Typography
   google_fonts: ^6.1.0
+  image_picker: ^1.0.7
   
   # Asset handling
   flutter_svg: ^2.0.9
