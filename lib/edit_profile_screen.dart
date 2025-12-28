@@ -1,5 +1,7 @@
+import 'dart:io'; // Diperlukan untuk File
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart'; // Import package image_picker
 import 'constants.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -30,7 +32,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _passwordController;
   
   bool _isPasswordVisible = false;
-  bool _photoChanged = false; // Flag simulasi foto berubah
+  
+  // State untuk Foto Profil
+  XFile? _pickedImage; 
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -51,9 +56,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
+  // --- LOGIKA AMBIL FOTO ---
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80, // Kompresi agar ringan
+        maxWidth: 800,    // Resize agar tidak terlalu besar
+      );
+      
+      if (image != null) {
+        setState(() {
+          _pickedImage = image;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Foto profil berhasil dipilih")),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Gagal mengambil gambar: $e"),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
   void _handleSave() {
     if (_formKey.currentState!.validate()) {
-      // 1. Tampilkan Feedback
+      // 1. Tampilkan Feedback Visual
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profil Berhasil Diperbarui'),
@@ -68,7 +105,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'email': _emailController.text,
         'phone': _phoneController.text,
         'password': _passwordController.text,
-        'photoUpdated': _photoChanged,
+        // Kirim path gambar jika ada yang baru dipilih
+        'imagePath': _pickedImage?.path, 
       };
 
       // 3. Kirim data kembali ke ProfileScreen
@@ -122,26 +160,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         child: CircleAvatar(
                           radius: 50,
-                          backgroundColor: _photoChanged ? AppColors.secondary : Colors.grey,
-                          child: Icon(
-                            _photoChanged ? Icons.face : Icons.person,
-                            size: 60,
-                            color: Colors.white,
-                          ),
+                          backgroundColor: Colors.grey[300],
+                          // Logika Tampilan Foto:
+                          // Jika ada foto baru (_pickedImage), tampilkan FileImage
+                          // Jika tidak, tampilkan Icon default (atau foto lama dari URL jika nanti ada backend)
+                          backgroundImage: _pickedImage != null 
+                              ? FileImage(File(_pickedImage!.path)) 
+                              : null,
+                          child: _pickedImage == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.white,
+                                )
+                              : null,
                         ),
                       ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _photoChanged = !_photoChanged;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Foto Profil Diubah")),
-                            );
-                          },
+                          onTap: _pickImage, // Panggil fungsi ambil foto
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(
