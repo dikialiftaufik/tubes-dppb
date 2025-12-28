@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
-import 'reservation_form_screen.dart'; 
+import 'reservation_form_screen.dart';
 import 'profile_screen.dart';
 import 'cart_screen.dart';
 import 'models.dart';
 import 'menu_detail_screen.dart';
 import 'menu_catalog_screen.dart';
+import 'notification_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,7 +32,20 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const MenuCatalogScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const MenuCatalogScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
               );
             },
           ),
