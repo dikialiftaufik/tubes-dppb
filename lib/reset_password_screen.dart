@@ -1,144 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'services/api_service.dart';
+import 'login_screen.dart';
 import 'constants.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  final String? initialEmail;
+  final String? initialToken;
+
+  const ResetPasswordScreen({super.key, this.initialEmail, this.initialToken});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
-  
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
-
-  final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  late TextEditingController _emailController;
+  late TextEditingController _tokenController;
+  final _passwordController = TextEditingController();
+  final ApiService _apiService = ApiService();
+  bool _isLoading = false;
 
   @override
-  void dispose() {
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail ?? '');
+    _tokenController = TextEditingController(text: widget.initialToken ?? '');
   }
 
-  void _handleChangePassword() {
-    if (_formKey.currentState!.validate()) {
-      // Show Success Message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password Berhasil Diubah'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+  void _handleReset() async {
+    setState(() => _isLoading = true);
+    
+    bool success = await _apiService.resetPassword(
+      _emailController.text,
+      _tokenController.text,
+      _passwordController.text,
+    );
 
-      // Return to Login (Pop until the first route)
-      Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() => _isLoading = false);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password berhasil direset! Silakan Login.')));
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal reset password. Cek Token/Email.')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          "Reset Password",
-          style: GoogleFonts.poppins(
-            color: AppColors.secondary, 
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Buat Password Baru',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Password baru harus berbeda dari yang sebelumnya digunakan.',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // --- New Password ---
-                TextFormField(
-                  controller: _newPasswordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Please enter password';
-                    if (value.length < 6) return 'Must be at least 6 characters';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // --- Confirm New Password ---
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: !_isConfirmPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Konfirmasi Password',
-                    prefixIcon: const Icon(Icons.verified_user),
-                    suffixIcon: IconButton(
-                      icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Please confirm password';
-                    if (value != _newPasswordController.text) return 'Passwords do not match';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
-
-                // --- Change Button ---
-                SizedBox(
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _handleChangePassword,
-                    style: AppStyles.primaryButtonStyle,
-                    child: const Text('Ubah Password'),
-                  ),
-                ),
-              ],
+      appBar: AppBar(title: const Text("Reset Password")),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            TextField(controller: _emailController, decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder())),
+            const SizedBox(height: 16),
+            TextField(controller: _tokenController, decoration: const InputDecoration(labelText: "Token Reset", border: OutlineInputBorder())),
+            const SizedBox(height: 16),
+            TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: "Password Baru", border: OutlineInputBorder())),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _handleReset,
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                child: _isLoading ? const CircularProgressIndicator() : const Text("Simpan Password Baru", style: TextStyle(color: Colors.white)),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

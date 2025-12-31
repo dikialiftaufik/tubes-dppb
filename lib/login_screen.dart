@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'constants.dart'; 
+import 'constants.dart';
+import 'services/api_service.dart';
+import 'home_screen.dart';
 import 'register_screen.dart';
-import 'forgot_password_screen.dart'; 
-// REVISI: Import MainScreen, bukan HomeScreen
-import 'main_screen.dart'; 
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,172 +14,76 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  bool _isPasswordVisible = false;
-  
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final ApiService _apiService = ApiService();
+  bool _isLoading = false;
 
   void _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      FocusScope.of(context).unfocus(); // Tutup keyboard
-      
-      // Simulasi loading sebentar
-      await Future.delayed(const Duration(milliseconds: 500));
+    setState(() => _isLoading = true);
 
-      if (!mounted) return;
+    bool success = await _apiService.login(
+      _emailController.text,
+      _passwordController.text,
+    );
 
-      // REVISI PENTING:
-      // Pindah ke MainScreen (yang punya Bottom Nav Bar), bukan HomeScreen.
-      // Gunakan pushReplacement agar user tidak bisa back ke halaman login.
+    setState(() => _isLoading = false);
+
+    if (success && mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login Gagal! Email atau password salah.')),
       );
     }
-  }
-
-  void _navigateToRegister() {
-    FocusScope.of(context).unfocus(); 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const RegisterScreen()),
-    );
-  }
-
-  void _navigateToForgotPassword() {
-    FocusScope.of(context).unfocus(); 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'The Komars',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Rasa Tanpa Batas',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  
-                  // Email Field
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email Address',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter email';
-                      if (!value.contains('@')) return 'Invalid email';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Password Field
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter password';
-                      return null;
-                    },
-                  ),
-                  
-                  // TOMBOL FORGOT PASSWORD
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: _navigateToForgotPassword, 
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.secondary,
-                      ),
-                      child: const Text('Lupa Password?'),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  
-                  // Login Button
-                  SizedBox(
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _handleLogin,
-                      style: AppStyles.primaryButtonStyle,
-                      child: const Text('Login'),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Register Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Belum punya akun?",
-                        style: GoogleFonts.poppins(color: Colors.grey[700]),
-                      ),
-                      TextButton(
-                        onPressed: _navigateToRegister,
-                        child: Text(
-                          'Daftar Sekarang',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("The Komars", style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary)),
+            const SizedBox(height: 40),
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: "Password", border: OutlineInputBorder()),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const ForgotPasswordScreen())),
+                child: const Text("Lupa Password?"),
               ),
             ),
-          ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _handleLogin,
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text("Masuk", style: TextStyle(color: Colors.white)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const RegisterScreen())),
+              child: const Text("Belum punya akun? Daftar disini"),
+            ),
+          ],
         ),
       ),
     );

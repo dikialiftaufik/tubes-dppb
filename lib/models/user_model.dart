@@ -3,7 +3,7 @@ class UserModel {
   final String name;
   final String email;
   final String role;
-  final String? profilePhoto; // Nullable jika user belum pasang foto
+  final String? profilePhoto;
 
   UserModel({
     required this.id,
@@ -16,10 +16,10 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
-      name: json['name'] as String,
-      email: json['email'] as String,
-      role: json['role'] as String,
-      profilePhoto: json['foto_profile'] as String?, // Sesuaikan dengan nama kolom di database kamu
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? 'user',
+      profilePhoto: json['foto_profile'], // Sesuai kolom DB 'foto_profile'
     );
   }
 }
