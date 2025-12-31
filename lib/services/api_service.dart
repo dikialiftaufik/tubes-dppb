@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'dart:io'; // PENTING: Diperlukan untuk tipe data File
+import 'dart:io'; // PENTING: Untuk File
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
+import '../models/notification_model.dart'; // Jika ada model notifikasi
 import '../constants.dart';
 
 class ApiService {
@@ -24,7 +25,6 @@ class ApiService {
 
   // ---------------- AUTHENTICATION ----------------
 
-  // 1. REGISTER
   Future<bool> register(String name, String email, String password) async {
     try {
       final response = await http.post(
@@ -35,18 +35,15 @@ class ApiService {
           'email': email,
           'password': password,
           'password_confirmation': password,
-          'role': 'pembeli', // Force role pembeli
+          'role': 'pembeli',
         }),
       );
-      print("Register Response: ${response.body}"); 
       return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
-      print("Register Error: $e");
       return false;
     }
   }
 
-  // 2. LOGIN
   Future<bool> login(String email, String password) async {
     try {
       final response = await http.post(
@@ -55,16 +52,12 @@ class ApiService {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      print("Login Response: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final prefs = await SharedPreferences.getInstance();
         
-        // Simpan Token
         await prefs.setString('token', data['access_token']);
         
-        // Simpan Data User sementara
         if (data['user'] != null) {
           await prefs.setString('userName', data['user']['name']);
           await prefs.setString('userEmail', data['user']['email']);
@@ -73,12 +66,10 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      print("Login Error: $e");
       return false;
     }
   }
 
-  // 3. LOGOUT
   Future<void> logout() async {
     try {
       final headers = await getHeaders();
@@ -92,7 +83,6 @@ class ApiService {
 
   // ---------------- PROFILE ----------------
 
-  // 4. GET PROFILE
   Future<UserModel?> getProfile() async {
     try {
       final headers = await getHeaders();
@@ -110,7 +100,6 @@ class ApiService {
     return null;
   }
 
-  // 5. UPDATE PROFILE (METHOD YANG SEBELUMNYA HILANG)
   Future<bool> updateProfile({
     required String name,
     required String email,
@@ -120,21 +109,18 @@ class ApiService {
     final token = await getToken();
     var uri = Uri.parse('${AppConstants.baseUrl}/user/update');
 
-    // Gunakan MultipartRequest untuk upload file
     var request = http.MultipartRequest('POST', uri);
     request.headers.addAll({
       'Authorization': 'Bearer $token',
       'Accept': 'application/json',
     });
 
-    // Tambahkan Field Teks
     request.fields['name'] = name;
     request.fields['email'] = email;
     if (password != null && password.isNotEmpty) {
       request.fields['password'] = password;
     }
 
-    // Tambahkan File Gambar (jika ada)
     if (imageFile != null) {
       var pic = await http.MultipartFile.fromPath('foto_profile', imageFile.path);
       request.files.add(pic);
@@ -142,13 +128,8 @@ class ApiService {
 
     try {
       var response = await request.send();
-      // Periksa status code dari StreamedResponse
       if (response.statusCode == 200) {
         return true;
-      } else {
-        // Debugging: baca response body jika error
-        final respStr = await response.stream.bytesToString();
-        print("Update Failed: $respStr");
       }
     } catch (e) {
       print("Error Update Profile: $e");
@@ -158,7 +139,6 @@ class ApiService {
 
   // ---------------- FITUR LAINNYA ----------------
 
-  // 6. FORGOT PASSWORD
   Future<String?> forgotPassword(String email) async {
     try {
       final response = await http.post(
@@ -167,8 +147,6 @@ class ApiService {
         body: jsonEncode({'email': email}),
       );
       
-      print("Forgot Pass Response: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['token']; 
@@ -179,7 +157,6 @@ class ApiService {
     return null;
   }
 
-  // 7. RESET PASSWORD
   Future<bool> resetPassword(String email, String token, String password) async {
     try {
       final response = await http.post(
@@ -199,23 +176,47 @@ class ApiService {
     }
   }
 
-  // 8. SEND FEEDBACK
-  Future<bool> sendFeedback(String content) async {
+  // --- UPDATE PENTING: SEND FEEDBACK SESUAI CONTROLLER BARU ---
+  Future<bool> sendFeedback(String kategori, String pesan, File? imageFile) async {
+    final token = await getToken();
+    var uri = Uri.parse('${AppConstants.baseUrl}/feedback');
+
+    // Gunakan MultipartRequest karena ada potensi upload gambar
+    var request = http.MultipartRequest('POST', uri);
+    
+    // Header Wajib
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    });
+
+    // Tambahkan Field Teks (Sesuai nama di Controller Laravel: store)
+    request.fields['kategori_masukan'] = kategori;
+    request.fields['pesan_masukan'] = pesan;
+
+    // Tambahkan File Gambar (Sesuai nama di Controller: bukti_foto)
+    if (imageFile != null) {
+      var pic = await http.MultipartFile.fromPath('bukti_foto', imageFile.path);
+      request.files.add(pic);
+    }
+
     try {
-      final headers = await getHeaders();
-      final response = await http.post(
-        Uri.parse('${AppConstants.baseUrl}/feedback'),
-        headers: headers,
-        body: jsonEncode({'isi_feedback': content}),
-      );
-      return response.statusCode == 201 || response.statusCode == 200;
+      var response = await request.send();
+      
+      // Debugging response
+      final respStr = await response.stream.bytesToString();
+      print("Feedback Response Code: ${response.statusCode}");
+      print("Feedback Response Body: $respStr");
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return true;
+      }
     } catch (e) {
       print("Feedback Error: $e");
-      return false;
     }
+    return false;
   }
 
-  // 9. GET NOTIFICATIONS
   Future<List<dynamic>> getNotifications() async {
     try {
       final headers = await getHeaders();
@@ -226,6 +227,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
+        // Pastikan parsing sesuai struktur JSON dari Laravel
         if (json is Map && json.containsKey('data')) {
           return json['data'];
         } else if (json is List) {
