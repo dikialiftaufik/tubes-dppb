@@ -1,23 +1,20 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart'; 
 import 'constants.dart';
 import 'services/api_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String currentName;
   final String currentEmail;
-  final String currentPhone;
-  final String currentPassword;
-  final String? currentPhotoUrl; // <--- Tambahan Parameter
+  final String? currentPhotoUrl;
 
   const EditProfileScreen({
     super.key,
     required this.currentName,
     required this.currentEmail,
-    required this.currentPhone,
-    required this.currentPassword,
-    this.currentPhotoUrl, // <--- Tambahkan di Constructor
+    this.currentPhotoUrl,
   });
 
   @override
@@ -30,12 +27,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late TextEditingController _phoneController;
-  late TextEditingController _passwordController;
+  // Password Controller DIHAPUS
 
-  bool _isPasswordVisible = false;
   bool _isLoading = false;
-  
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
@@ -44,8 +38,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.currentName);
     _emailController = TextEditingController(text: widget.currentEmail);
-    _phoneController = TextEditingController(text: widget.currentPhone);
-    _passwordController = TextEditingController(); // Password kosong defaultnya
   }
 
   Future<void> _pickImage() async {
@@ -62,22 +54,75 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _isLoading = true);
 
-    // Panggil API Update Profile
+    // Panggil API Update Profile 
     bool success = await _apiService.updateProfile(
       name: _nameController.text,
       email: _emailController.text,
-      password: _passwordController.text.isEmpty ? null : _passwordController.text,
+      password: null, // Kita kirim null karena field password sudah dihapus
       imageFile: _imageFile,
     );
 
     setState(() => _isLoading = false);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profil berhasil diperbarui!')),
+      // --- Menampilkan Alert Dialog Sukses ---
+      showDialog(
+        context: context,
+        barrierDismissible: false, // User wajib menekan tombol OK
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            contentPadding: const EdgeInsets.all(24),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.green, size: 70),
+                const SizedBox(height: 16),
+                Text(
+                  "Berhasil!",
+                  style: GoogleFonts.poppins(
+                    fontSize: 22, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Profil Anda telah berhasil diperbarui.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14, 
+                    color: Colors.grey
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 45,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context); // Tutup Dialog
+                      Navigator.pop(context, true); // Kembali ke halaman sebelumnya dengan refresh data
+                    },
+                    child: Text(
+                      "OK", 
+                      style: GoogleFonts.poppins(
+                        color: Colors.white, 
+                        fontWeight: FontWeight.w600
+                      )
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       );
-      // Kembali ke halaman sebelumnya dengan sinyal true (untuk refresh data)
-      Navigator.pop(context, true); 
+      // ----------------------------------------------------
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gagal memperbarui profil.')),
@@ -87,22 +132,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Logika menampilkan gambar:
-    // 1. Jika user baru pilih gambar (_imageFile), tampilkan itu.
-    // 2. Jika tidak, tapi ada foto dari API (widget.currentPhotoUrl), tampilkan dari Network.
-    // 3. Jika tidak ada keduanya, tampilkan icon default.
-    ImageProvider? backgroundImage;
-    if (_imageFile != null) {
-      backgroundImage = FileImage(_imageFile!);
-    } else if (widget.currentPhotoUrl != null && widget.currentPhotoUrl!.isNotEmpty) {
-      // Pastikan URL valid
-      backgroundImage = NetworkImage('${AppConstants.imageUrl}/${widget.currentPhotoUrl!}');
-    }
-
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Edit Profil", style: TextStyle(color: Colors.white)),
+        title: Text("Edit Profil", style: GoogleFonts.poppins(color: Colors.white)), 
         backgroundColor: AppColors.primary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -114,69 +147,91 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- Bagian Foto ---
-              GestureDetector(
-                onTap: _pickImage,
+              // --- Bagian Upload Foto ---
+              Center(
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey[300],
-                      backgroundImage: backgroundImage,
-                      child: (backgroundImage == null)
-                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                          : null,
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey[200]!, width: 4),
+                      ),
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey[100],
+                        backgroundImage: _imageFile != null
+                            ? FileImage(_imageFile!)
+                            : (widget.currentPhotoUrl != null 
+                                ? NetworkImage('${AppConstants.imageUrl}/${widget.currentPhotoUrl!}') as ImageProvider 
+                                : null),
+                        child: (_imageFile == null && widget.currentPhotoUrl == null)
+                            ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                            : null,
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                         ),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                       ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
+              Center(
+                child: Text(
+                  "Ketuk ikon kamera untuk ganti foto",
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+              
               const SizedBox(height: 30),
 
               // --- Form Fields ---
+              
+              // Nama Lengkap
+              Text("Nama Lengkap", style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: "Nama Lengkap", border: OutlineInputBorder()),
-                validator: (val) => val!.isEmpty ? 'Wajib diisi' : null,
+                decoration: InputDecoration(
+                  hintText: "Masukkan nama anda",
+                  prefixIcon: const Icon(Icons.person_outline, color: AppColors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                validator: (val) => val!.isEmpty ? 'Nama wajib diisi' : null,
               ),
-              const SizedBox(height: 16),
+              
+              const SizedBox(height: 20),
+
+              // Email
+              Text("Email", style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
-                validator: (val) => val!.isEmpty ? 'Wajib diisi' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: "Nomor Telepon", border: OutlineInputBorder()),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
-                  labelText: "Password Baru (Opsional)",
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                  ),
+                  hintText: "Masukkan email anda",
+                  prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
+                validator: (val) => val!.isEmpty ? 'Email wajib diisi' : null,
               ),
-              const SizedBox(height: 32),
+
+              const SizedBox(height: 40),
 
               // --- Tombol Simpan ---
               SizedBox(
@@ -186,11 +241,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: _isLoading ? null : _handleSave,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 3,
                   ),
                   child: _isLoading 
                     ? const CircularProgressIndicator(color: Colors.white) 
-                    : const Text("Simpan Perubahan", style: TextStyle(color: Colors.white, fontSize: 16)),
+                    : Text(
+                        "Simpan Perubahan", 
+                        style: GoogleFonts.poppins(
+                          color: Colors.white, 
+                          fontSize: 16, 
+                          fontWeight: FontWeight.w600
+                        ),
+                      ),
                 ),
               ),
             ],
