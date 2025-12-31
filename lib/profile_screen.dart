@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
-import 'edit_profile_screen.dart';
-import 'login_screen.dart';
-import 'order_status_screen.dart';
+import 'edit_profile_screen.dart'; // Pastikan file ini ada
+import 'login_screen.dart';       // Pastikan file ini ada
+import 'order_status_screen.dart'; // Pastikan file ini ada
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,10 +18,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _email = "diki@example.com";
   String _phone = "+62 812 3456 7890";
   String _password = "password123";
-  bool _hasCustomPhoto = false; 
+  bool _hasCustomPhoto = false;
 
   // --- Logic Edit Profil ---
   void _navigateToEditProfile() async {
+    // Navigasi ke EditProfileScreen dan tunggu data balikan
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -58,18 +59,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      
+
       // --- APP BAR ---
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
         // Tombol Back Manual
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
-          onPressed: () => Navigator.pop(context), 
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Profil Saya",
@@ -129,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
 
               // 3. Form Data (Read Only)
@@ -208,7 +209,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      // BOTTOM NAVIGATION BAR SUDAH DIHAPUS
     );
   }
 

@@ -13,6 +13,10 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
+  http: ^1.2.0
+  shared_preferences: ^2.2.2 # Untuk menyimpan token login
+  intl: ^0.19.0 # Untuk format tanggal notifikasi
+
   # Typography
   google_fonts: ^6.1.0
   image_picker: ^1.0.7

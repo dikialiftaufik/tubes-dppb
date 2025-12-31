@@ -13,6 +13,11 @@ class AppColors {
   static const Color error = Color(0xFFB00020);
 }
 
+class AppConstants {
+  static const String baseUrl = 'http://192.168.1.8:8000/api'; 
+  static const String imageUrl = 'http://192.168.1.8:8000/storage/';
+}
+
 /// App-wide Style Constants
 class AppStyles {
   const AppStyles._();
