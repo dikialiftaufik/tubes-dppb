@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       id: item['id'].toString(),
                       name: item['nama_menu'] ?? 'Menu',
                       category: item['kategori'] ?? 'Umum',
-                      meat: '',
+                      meat: item['daging'] ?? item['meat'] ?? '',
                       price: double.tryParse(item['harga'].toString()) ?? 0,
                       description: item['deskripsi'] ?? '',
                       imageUrl: imageUrl, 

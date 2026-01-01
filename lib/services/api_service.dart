@@ -239,4 +239,76 @@ class ApiService {
     }
     return [];
   }
+
+  // ---------------- MENU (HOMESCREEN) ----------------
+  // (Bagian ini yang sebelumnya hilang)
+
+  Future<List<dynamic>> getMenu() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/menu'), headers: headers);
+      
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        // Cek struktur JSON, ambil key 'data' jika ada
+        if (json is Map && json.containsKey('data')) {
+          return json['data'];
+        } else if (json is List) {
+          return json;
+        }
+      }
+    } catch (e) {
+      print("Error Get Menu: $e");
+    }
+    return [];
+  }
+
+  Future<List<dynamic>> getMyReservations() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservations'), headers: headers);
+      
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json is Map && json.containsKey('data')) {
+          return json['data'];
+        } else if (json is List) {
+          return json;
+        }
+      }
+    } catch (e) {
+      print("Error Get Reservations: $e");
+    }
+    return [];
+  }
+
+  Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName');
+  }
+
+  Future<bool> createReservation({
+    required String tglReservasi,
+    required String jamMulai,
+    required int jmlOrg,
+    required String catatan,
+  }) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}/reservations'),
+        headers: headers,
+        body: jsonEncode({
+          'tgl_reservasi': tglReservasi,
+          'jam_mulai': jamMulai,
+          'jml_org': jmlOrg,
+          'catatan': catatan,
+        }),
+      );
+      return response.statusCode == 201 || response.statusCode == 200;
+    } catch (e) {
+      print("Create Reservation Error: $e");
+      return false;
+    }
+  }
 }
