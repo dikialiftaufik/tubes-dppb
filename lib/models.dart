@@ -1,56 +1,34 @@
-// Menu Item Model
+// Lokasi: lib/models.dart
+
 class MenuItem {
   final String id;
   final String name;
-  final String category; // 'Sate' atau 'Tongseng'
-  final String meat; // 'Ayam', 'Sapi', 'Kambing'
-  final double price;
+  final String category;
   final String description;
+  final double price;
   final String imageUrl;
+  final String meat; // Tambahan untuk filter jenis daging (jika ada)
 
   MenuItem({
     required this.id,
     required this.name,
     required this.category,
-    required this.meat,
-    required this.price,
     required this.description,
+    required this.price,
     required this.imageUrl,
-  });
-}
-
-// Cart Item Model
-class CartItem {
-  final MenuItem menuItem;
-  int quantity;
-
-  CartItem({
-    required this.menuItem,
-    this.quantity = 1,
+    this.meat = '', // Default string kosong agar aman
   });
 
-  double get totalPrice => menuItem.price * quantity;
-}
-
-// Order Model
-class Order {
-  final String id;
-  final List<CartItem> items;
-  final String status; // 'pending', 'confirmed', 'completed', 'cancelled'
-  final String deliveryAddress;
-  final String paymentMethod; // 'transfer', 'qris'
-  final double totalPrice;
-  final DateTime orderDate;
-  final DateTime? completedDate;
-
-  Order({
-    required this.id,
-    required this.items,
-    required this.status,
-    required this.deliveryAddress,
-    required this.paymentMethod,
-    required this.totalPrice,
-    required this.orderDate,
-    this.completedDate,
-  });
+  // Opsional: Helper untuk convert dari JSON jika mau dipindah dari service
+  factory MenuItem.fromJson(Map<String, dynamic> json) {
+    return MenuItem(
+      id: json['id'].toString(),
+      name: json['nama_menu'] ?? 'Tanpa Nama',
+      category: json['kategori'] ?? 'Umum',
+      description: json['deskripsi'] ?? '',
+      price: double.tryParse(json['harga'].toString()) ?? 0,
+      imageUrl: json['foto'] ?? '',
+      meat: json['jenis_daging'] ?? '',
+    );
+  }
 }
