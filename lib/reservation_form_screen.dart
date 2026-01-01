@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart'; // Package untuk format tanggal
 import 'constants.dart';
+import 'services/api_service.dart'; // Pastikan import service API ada
 
 class ReservationFormScreen extends StatefulWidget {
   const ReservationFormScreen({super.key});
@@ -18,8 +20,30 @@ class _ReservationFormScreenState extends State<ReservationFormScreen> {
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   
+  // Variable untuk menyimpan tanggal asli (Objek DateTime)
+  DateTime? _selectedDateObj;
+
   String? _selectedPerson;
   final List<String> _personOptions = ['1 Orang', '2 Orang', '3-4 Orang', '5+ Orang'];
+
+  // State untuk loading saat mengirim data
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  // Otomatis isi nama dari profil user yang login (Opsional, biar UX lebih bagus)
+  void _loadUserProfile() async {
+    final name = await ApiService().getUserName(); // Pastikan ada getter ini atau ambil dari SharedPreferences manual
+    if (name != null) {
+      setState(() {
+        _nameController.text = name;
+      });
+    }
+  }
 
   // Fungsi Date Picker
   Future<void> _selectDate(BuildContext context) async {
@@ -39,7 +63,9 @@ class _ReservationFormScreenState extends State<ReservationFormScreen> {
     );
     if (picked != null) {
       setState(() {
-        _dateController.text = "${picked.day}/${picked.month}/${picked.year}";
+        _selectedDateObj = picked;
+        // Tampilkan ke User format Indonesia (DD/MM/YYYY)
+        _dateController.text = DateFormat('dd/MM/yyyy').format(picked);
       });
     }
   }
@@ -60,12 +86,17 @@ class _ReservationFormScreenState extends State<ReservationFormScreen> {
     );
     if (picked != null) {
       setState(() {
-        _timeController.text = picked.format(context);
+        // Format jam agar selalu 2 digit (misal: 09:05)
+        final localizations = MaterialLocalizations.of(context);
+        // Kita format manual ke HH:mm untuk API (24 jam format lebih aman)
+        final String hour = picked.hour.toString().padLeft(2, '0');
+        final String minute = picked.minute.toString().padLeft(2, '0');
+        _timeController.text = "$hour:$minute";
       });
     }
   }
 
-  // --- IMPLEMENTASI ALERT DIALOG (Sesuai Ketentuan Poin 11c) ---
+  // --- IMPLEMENTASI ALERT DIALOG KONFIRMASI ---
   void _showConfirmationDialog() {
     showDialog(
       context: context,
@@ -99,7 +130,7 @@ class _ReservationFormScreenState extends State<ReservationFormScreen> {
               child: Text('Ya, Pesan', style: GoogleFonts.poppins(color: Colors.white)),
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup Dialog
-                _processReservation(); // Lanjut ke proses simpan
+                _processReservation(); // Lanjut ke proses simpan ke Database
               },
             ),
           ],
@@ -108,16 +139,68 @@ class _ReservationFormScreenState extends State<ReservationFormScreen> {
     );
   }
 
-  void _processReservation() {
-    // Simulasi sukses
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Reservasi Berhasil Diajukan!'), 
-        backgroundColor: Colors.green
-      ),
+  // --- FUNGSI KIRIM KE DATABASE ---
+  void _processReservation() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // 1. Parsing Jumlah Orang (Ubah "3-4 Orang" menjadi angka integer)
+    int jumlahOrang = 1;
+    if (_selectedPerson != null) {
+      // Mengambil angka pertama yang ditemukan
+      // Contoh: "5+ Orang" -> diambil '5'
+      String numberString = _selectedPerson!.replaceAll(RegExp(r'[^0-9]'), ''); 
+      if (numberString.isNotEmpty) {
+        // Ambil digit pertama saja jika ada range (misal 34 jadi 3), atau ambil semua tergantung logika
+        // Logika sederhana: ambil angka dari string
+        jumlahOrang = int.tryParse(numberString.substring(0, 1)) ?? 1; 
+        if (_selectedPerson!.contains('3-4')) jumlahOrang = 4; // Override manual jika perlu
+        if (_selectedPerson!.contains('5+')) jumlahOrang = 6;
+      }
+    }
+
+    // 2. Format Tanggal untuk API (YYYY-MM-DD)
+    // MySQL butuh format YYYY-MM-DD, bukan dd/MM/yyyy
+    String tanggalApi = "";
+    if (_selectedDateObj != null) {
+      tanggalApi = DateFormat('yyyy-MM-dd').format(_selectedDateObj!);
+    } else {
+      // Fallback jika error (seharusnya tidak terjadi karena validator)
+      tanggalApi = DateTime.now().toString().split(' ')[0];
+    }
+
+    // 3. Panggil API Service
+    bool success = await ApiService().createReservation(
+      tglReservasi: tanggalApi,
+      jamMulai: _timeController.text, // Pastikan format HH:mm
+      jmlOrg: jumlahOrang,
+      catatan: _notesController.text,
     );
-    // Kembali ke halaman Home
-    Navigator.pop(context);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reservasi Berhasil Diajukan! Cek Menu Riwayat.'), 
+          backgroundColor: Colors.green
+        ),
+      );
+      // Kembali ke halaman Home
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal membuat reservasi. Cek koneksi atau login ulang.'), 
+          backgroundColor: Colors.red
+        ),
+      );
+    }
   }
 
   @override
@@ -147,10 +230,11 @@ class _ReservationFormScreenState extends State<ReservationFormScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Nama Pemesan
+              // Nama Pemesan (Readonly disarankan jika ambil dari akun login)
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nama Pemesan', prefixIcon: Icon(Icons.person)),
+                // readOnly: true, // Uncomment jika nama tidak boleh diedit
                 validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
               ),
               const SizedBox(height: 16),
@@ -206,14 +290,17 @@ class _ReservationFormScreenState extends State<ReservationFormScreen> {
               SizedBox(
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Panggil Alert Dialog Konfirmasi
-                      _showConfirmationDialog();
-                    }
-                  },
+                  onPressed: _isLoading 
+                    ? null // Disable tombol saat loading
+                    : () {
+                        if (_formKey.currentState!.validate()) {
+                          _showConfirmationDialog();
+                        }
+                      },
                   style: AppStyles.primaryButtonStyle,
-                  child: const Text('Buat Reservasi'),
+                  child: _isLoading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Buat Reservasi'),
                 ),
               ),
             ],
