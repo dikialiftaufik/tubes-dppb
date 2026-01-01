@@ -1,25 +1,43 @@
-// ---------------- MENU (HOME SCREEN) ----------------
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../constants.dart';
+
+class ApiService {
+  // --- AUTH & TOKEN ---
+  
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName');
+  }
+
+  // --- MENU (HOME SCREEN) ---
 
   Future<List<dynamic>> getMenu() async {
     try {
-      // Menu bersifat public di api.php, jadi tidak perlu token (header auth)
       final response = await http.get(Uri.parse('${AppConstants.baseUrl}/menu'));
-
+      
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json is Map && json.containsKey('data')) {
           return json['data'];
+        } else if (json is List) {
+          return json;
         }
       }
     } catch (e) {
-      print("Get Menu Error: $e");
+      print("Error Get Menu: $e");
     }
     return [];
   }
 
-  // ---------------- RESERVASI ----------------
+  // --- RESERVASI ---
 
-  // 1. Buat Reservasi Baru (Dipakai di Form Reservasi)
   Future<bool> createReservation({
     required String tglReservasi, // Format: YYYY-MM-DD
     required String jamMulai,     // Format: HH:MM
@@ -32,26 +50,23 @@
         Uri.parse('${AppConstants.baseUrl}/reservations'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // Wajib Login
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'tgl_reservasi': tglReservasi,
           'jam_mulai': jamMulai,
           'jml_org': jmlOrg,
-          'catatan': catatan, // Jika di database ada kolom catatan/message
+          'catatan': catatan,
         }),
       );
 
-      print("Response Reservasi: ${response.body}"); // Debugging
-
       return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
-      print("Create Reservation Error: $e");
+      print("Error Create Reservation: $e");
       return false;
     }
   }
 
-  // 2. Ambil Daftar Reservasi (Dipakai di Riwayat)
   Future<List<dynamic>> getMyReservations() async {
     final token = await getToken();
     try {
@@ -65,10 +80,11 @@
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        return json['data']; // Mengembalikan List Reservasi
+        return json['data'];
       }
     } catch (e) {
-      print("Get Reservations Error: $e");
+      print("Error Get My Reservations: $e");
     }
     return [];
   }
+}
