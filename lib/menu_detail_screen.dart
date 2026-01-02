@@ -126,7 +126,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           ),
                         ),
                         Text(
-                          'Rp ${widget.menuItem.price.toStringAsFixed(0)}',
+                          'Rp ${formatRupiah(widget.menuItem.price)}',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -204,7 +204,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           ),
                         ),
                         Text(
-                          'Rp ${(widget.menuItem.price * _quantity).toStringAsFixed(0)}',
+                          'Rp ${formatRupiah(widget.menuItem.price * _quantity)}',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
