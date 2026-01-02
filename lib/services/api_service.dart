@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/notification_model.dart'; // Jika ada model notifikasi
+import '../models.dart';
 import '../constants.dart';
 
 class ApiService {
@@ -324,5 +325,119 @@ class ApiService {
       print("Create Reservation Error: $e");
       return false;
     }
+  }
+
+  // ---------------- CART METHODS ----------------
+  Future<List<CartItem>> getCart() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/cart'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final data = json['data'] ?? [];
+        return data.map<CartItem>((item) => CartItem.fromJson(item)).toList();
+      }
+    } catch (e) {
+      print("Get Cart Error: $e");
+    }
+    return [];
+  }
+
+  Future<bool> updateCartItem(int id, int quantity) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.put(
+        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
+        headers: headers,
+        body: jsonEncode({'quantity': quantity}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Update Cart Item Error: $e");
+      return false;
+    }
+  }
+
+  Future<bool> removeCartItem(int id) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.delete(
+        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
+        headers: headers,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Remove Cart Item Error: $e");
+      return false;
+    }
+  }
+
+  Future<bool> clearCart() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.delete(
+        Uri.parse('${AppConstants.baseUrl}/cart'),
+        headers: headers,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Clear Cart Error: $e");
+      return false;
+    }
+  }
+
+  // ---------------- ORDER METHODS ----------------
+  Future<bool> createOrder({
+    required double totalPrice,
+    required String paymentStatus,
+  }) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}/checkout'),
+        headers: headers,
+        body: jsonEncode({
+          'total_price': totalPrice,
+          'payment_status': paymentStatus,
+        }),
+      );
+      return response.statusCode == 201 || response.statusCode == 200;
+    } catch (e) {
+      print("Create Order Error: $e");
+      return false;
+    }
+  }
+
+  Future<List<Order>> getOrders() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/riwayat-pesanan'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final data = json['data'] ?? [];
+        return data.map<Order>((item) => Order.fromJson(item)).toList();
+      }
+    } catch (e) {
+      print("Get Orders Error: $e");
+    }
+    return [];
+  }
+
+  // Alias for getMyReservations
+  Future<List<Reservation>> getReservations() async {
+    final data = await getMyReservations();
+    return data.map<Reservation>((item) => Reservation.fromJson(item)).toList();
+  }
+
+  // Alias for getMenu
+  Future<List<MenuItem>> getMenus() async {
+    final data = await getMenu();
+    return data.map<MenuItem>((item) => MenuItem.fromJson(item)).toList();
   }
 }

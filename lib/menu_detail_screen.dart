@@ -5,6 +5,8 @@ import 'constants.dart';
 import 'models.dart';
 import 'services/api_service.dart';
 
+final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
+
 class MenuDetailScreen extends StatefulWidget {
   final MenuItem menuItem;
   const MenuDetailScreen({super.key, required this.menuItem});
