@@ -16,30 +16,17 @@ class MyReservationScreen extends StatefulWidget {
   State<MyReservationScreen> createState() => _MyReservationScreenState();
 }
 
-class _MyReservationScreenState extends State<MyReservationScreen> with TickerProviderStateMixin {
-  late int _selectedIndex;
+class _MyReservationScreenState extends State<MyReservationScreen> {
   late Future<List<dynamic>> _dataFuture;
-  TabController? _tabController;
-  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.initialIndex == 0 ? 2 : (widget.initialIndex == 1 ? 3 : 1); // Default to Home if 0, else history/active
-    if (_selectedIndex == 1 || _selectedIndex == 3) {
-      _tabController = TabController(length: 2, vsync: this, initialIndex: _selectedIndex == 3 ? 1 : 0);
-    }
     _loadData();
   }
 
   void _loadData() {
     _dataFuture = ApiService().getMyReservations();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _refreshData();
   }
 
   Future<void> _refreshData() async {
@@ -48,121 +35,41 @@ class _MyReservationScreenState extends State<MyReservationScreen> with TickerPr
     });
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-      if ((index == 1 || index == 3) && _tabController == null) {
-        _tabController = TabController(length: 2, vsync: this, initialIndex: index == 3 ? 1 : 0);
-      } else if (index != 1 && index != 3) {
-        _tabController?.dispose();
-        _tabController = null;
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _tabController?.dispose();
-    _refreshTimer?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    Widget body;
-    PreferredSizeWidget? appBar;
-
-    if (_selectedIndex == 1 || _selectedIndex == 3) {
-      appBar = AppBar(
-        title: const Text('Reservasi Saya', style: TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.primary,
-        automaticallyImplyLeading: false,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          tabs: const [Tab(text: 'Berlangsung'), Tab(text: 'Riwayat')],
+    return DefaultTabController(
+      length: 2,
+      initialIndex: widget.initialIndex,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Reservasi Saya', style: TextStyle(color: Colors.white)),
+          backgroundColor: AppColors.primary,
+          automaticallyImplyLeading: false,
+          bottom: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            tabs: [Tab(text: 'Berlangsung'), Tab(text: 'Riwayat')],
+          ),
         ),
-      );
-      body = FutureBuilder<List<dynamic>>(
-        future: _dataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text("Belum ada reservasi"));
+        body: FutureBuilder<List<dynamic>>(
+          future: _dataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+            if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text("Belum ada reservasi"));
 
-          final all = snapshot.data!;
-          final active = all.where((e) => ['confirmed', 'diproses', 'diterima'].contains(e['status'].toString().toLowerCase())).toList();
-          final history = all.where((e) => ['pending', 'completed', 'cancelled', 'selesai', 'batal'].contains(e['status'].toString().toLowerCase())).toList();
+            final all = snapshot.data!;
+            final active = all.where((e) => ['confirmed', 'diproses', 'diterima', 'pending'].contains(e['status'].toString().toLowerCase())).toList();
+            final history = all.where((e) => ['completed', 'cancelled', 'selesai', 'batal'].contains(e['status'].toString().toLowerCase())).toList();
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              RefreshIndicator(onRefresh: _refreshData, child: _buildList(active)),
-              RefreshIndicator(onRefresh: _refreshData, child: _buildList(history))
-            ],
-          );
-        },
-      );
-    } else {
-      switch (_selectedIndex) {
-        case 0:
-          body = const MenuScreen();
-          break;
-        case 2:
-          body = const HomeScreen();
-          break;
-        case 4:
-          body = const FeedbackScreen();
-          break;
-        default:
-          body = const Center(child: Text("Halaman tidak ditemukan"));
-      }
-      appBar = null;
-    }
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: appBar,
-      body: body,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant_menu),
-              label: 'Menu',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.event_available),
-              label: 'Berlangsung',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history),
-              label: 'Riwayat',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.feedback),
-              label: 'Feedback',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: Colors.grey,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
+            return TabBarView(
+              children: [
+                RefreshIndicator(onRefresh: _refreshData, child: _buildList(active)),
+                RefreshIndicator(onRefresh: _refreshData, child: _buildList(history))
+              ],
+            );
+          },
         ),
       ),
     );

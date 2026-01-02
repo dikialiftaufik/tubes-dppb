@@ -72,8 +72,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             tabs: const [
-              Tab(text: 'Riwayat Pesanan'),
-              Tab(text: 'Riwayat Reservasi'),
+              Tab(text: 'Pesanan'),
+              Tab(text: 'Reservasi'),
             ],
           ),
         ),
@@ -93,7 +93,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Show all orders (database uses: Selesai, diproses, Menunggu Pembayaran, etc.)
     if (orders.isEmpty) {
       return _buildEmptyState(
         icon: Icons.receipt_long_outlined,
@@ -107,95 +106,59 @@ class _HistoryScreenState extends State<HistoryScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: orders.length,
         itemBuilder: (context, index) {
-          return _buildOrderCard(orders[index]);
+          final order = orders[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        order.orderCode,
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.secondary),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(order.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          order.status,
+                          style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: _getStatusColor(order.status)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Dipesan: ${order.orderDate.day}/${order.orderDate.month}/${order.orderDate.year}',
+                    style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total Pembayaran',
+                        style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.secondary),
+                      ),
+                      Text(
+                        order.formattedTotalPrice,
+                        style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
         },
-      ),
-    );
-  }
-
-  Widget _buildOrderCard(Order order) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  order.orderCode,
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.secondary,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    order.status,
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: _getStatusColor(order.status),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            const SizedBox(height: 8),
-
-            // Items summary
-            ...order.items.take(2).map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                '${item.menuName} x${item.quantity}',
-                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700]),
-              ),
-            )),
-            if (order.items.length > 2)
-              Text(
-                '+${order.items.length - 2} item lainnya',
-                style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[500]),
-              ),
-
-            const SizedBox(height: 8),
-
-            // Date & Total
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDate(order.orderDate),
-                      style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-                Text(
-                  order.formattedTotalPrice,
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -206,11 +169,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final historyReservations = reservations.where((r) => 
-      r.status == 'completed' || r.status == 'cancelled'
+    // Filter status yang sudah menjadi riwayat
+    final historyList = reservations.where((r) => 
+      ['completed', 'cancelled', 'selesai', 'batal'].contains(r.status.toLowerCase())
     ).toList();
 
-    if (historyReservations.isEmpty) {
+    if (historyList.isEmpty) {
       return _buildEmptyState(
         icon: Icons.calendar_month_outlined,
         message: 'Belum ada riwayat reservasi',
@@ -221,83 +185,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
       onRefresh: _loadReservations,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: historyReservations.length,
+        itemCount: historyList.length,
         itemBuilder: (context, index) {
-          return _buildReservationCard(historyReservations[index]);
+          final item = historyList[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              title: Text("Reservasi #${item.id}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              subtitle: Text("${item.date} | ${item.time} | ${item.guestCount} Org"),
+              trailing: Chip(
+                label: Text(item.status.toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.white)),
+                backgroundColor: item.status.toLowerCase() == 'completed' || item.status.toLowerCase() == 'selesai' ? Colors.green : Colors.grey,
+              ),
+            ),
+          );
         },
       ),
-    );
-  }
-
-  Widget _buildReservationCard(Reservation reservation) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Meja No. ${reservation.tableNumber}',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: AppColors.secondary,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: reservation.status == 'completed' 
-                        ? Colors.green.withOpacity(0.1) 
-                        : Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    reservation.status == 'completed' ? 'Selesai' : 'Dibatalkan',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: reservation.status == 'completed' ? Colors.green : Colors.red,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            const SizedBox(height: 8),
-
-            // Details
-            _buildInfoRow(Icons.calendar_today, reservation.date),
-            const SizedBox(height: 4),
-            _buildInfoRow(Icons.access_time, '${reservation.time} WIB'),
-            const SizedBox(height: 4),
-            _buildInfoRow(Icons.people, '${reservation.guestCount} Orang'),
-            if (reservation.notes != null && reservation.notes!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              _buildInfoRow(Icons.note, reservation.notes!),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: GoogleFonts.poppins(color: Colors.grey[800], fontSize: 13),
-        ),
-      ],
     );
   }
 
@@ -308,43 +211,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
         children: [
           Icon(icon, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          Text(
-            message,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(message, style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600])),
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai':
+      case 'pending': return Colors.orange;
+      case 'confirmed':
+      case 'diproses': return Colors.blue;
       case 'completed':
-      case 'lunas':
-        return Colors.green;
-      case 'diproses':
-      case 'processing':
-        return Colors.blue;
-      case 'pending':
-      case 'menunggu pembayaran':
-        return Colors.orange;
+      case 'selesai': return Colors.green;
       case 'cancelled':
-      case 'dibatalkan':
-        return Colors.red;
-      default:
-        return Colors.grey;
+      case 'dibatalkan': return Colors.red;
+      default: return Colors.grey;
     }
   }
 }
