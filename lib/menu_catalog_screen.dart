@@ -114,37 +114,37 @@ class _MenuCatalogScreenState extends State<MenuCatalogScreen> {
                   ? item.isAsset
                       ? Image.asset(
                           item.imageUrl,
-                          width: 140,
-                          height: 140,
+                          width: 110, // Diubah dari 140
+                          height: 110,
                           fit: BoxFit.cover,
                         )
                       : Image.network(
                           item.imageUrl,
-                          width: 140,
-                          height: 140,
+                          width: 110, // Diubah dari 140
+                          height: 110,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              width: 140,
-                              height: 140,
+                              width: 110,
+                              height: 110,
                               color: AppColors.primary.withOpacity(0.1),
                               child: Icon(Icons.restaurant,
-                                  size: 50, color: AppColors.primary),
+                                  size: 40, color: AppColors.primary),
                             );
                           },
                         )
                   : Container(
-                      width: 140,
-                      height: 140,
+                      width: 110,
+                      height: 110,
                       color: AppColors.primary.withOpacity(0.1),
-                      child: Icon(Icons.restaurant, size: 50, color: AppColors.primary),
+                      child: Icon(Icons.restaurant, size: 40, color: AppColors.primary),
                     ),
             ),
 
             // Info section
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Diubah dari 16
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'constants.dart';
+import 'models.dart';
 import 'services/api_service.dart';
 
 class MyReservationScreen extends StatefulWidget {
@@ -18,7 +19,17 @@ class _MyReservationScreenState extends State<MyReservationScreen> {
   @override
   void initState() {
     super.initState();
-    _dataFuture = ApiService().getMyReservations();
+    _dataFuture = ApiService().getReservations().then((List<Reservation> list) {
+      return list.map((Reservation e) => {
+        'id': e.id,
+        'status': e.status,
+        'tanggal': e.date,
+        'jam_mulai': e.time,
+        'jumlah_orang': e.guestCount,
+        'catatan': e.notes,
+        'nomor_meja': e.tableNumber,
+      }).toList();
+    });
   }
 
   @override

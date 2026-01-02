@@ -14,8 +14,8 @@ class AppColors {
 }
 
 class AppConstants {
-  static const String baseUrl = 'http://192.168.1.8:8000/api'; 
-  static const String imageUrl = 'http://192.168.1.8:8000/storage/';
+  static const String baseUrl = 'http://127.0.0.1:8000/api'; 
+  static const String imageUrl = 'http://127.0.0.1:8000/storage/';
 }
 
 /// App-wide Style Constants

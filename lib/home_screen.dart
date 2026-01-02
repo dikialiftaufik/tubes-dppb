@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // DATA FAVORIT + path diperbaiki
                 final favoriteMenus = [
                   MenuItem(
-                    id: '1',
+                    id: 1,
                     name: 'Sate Ayam',
                     category: 'Sate',
                     meat: 'Ayam',
@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     imageUrl: 'lib/assets/sateayam.jpg',
                   ),
                   MenuItem(
-                    id: '2',
+                    id: 2,
                     name: 'Sate Sapi',
                     category: 'Sate',
                     meat: 'Sapi',
@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     imageUrl: 'lib/assets/satesapi.jpg',
                   ),
                   MenuItem(
-                    id: '4',
+                    id: 4,
                     name: 'Tongseng Ayam',
                     category: 'Tongseng',
                     meat: 'Ayam',
@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     imageUrl: 'lib/assets/tongsengayam.jpg',
                   ),
                   MenuItem(
-                    id: '5',
+                    id: 5,
                     name: 'Tongseng Sapi',
                     category: 'Tongseng',
                     meat: 'Sapi',
@@ -235,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Text(
-                                'Rp ${menu.price.toStringAsFixed(0)}',
+                                currencyFormatter.format(menu.price),
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,

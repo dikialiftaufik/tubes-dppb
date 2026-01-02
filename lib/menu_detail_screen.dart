@@ -15,6 +15,7 @@ class MenuDetailScreen extends StatefulWidget {
 
 class _MenuDetailScreenState extends State<MenuDetailScreen> {
   final ApiService _apiService = ApiService();
+  final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
   int _quantity = 1;
 
   @override
@@ -36,19 +37,43 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image placeholder
+            // Image Section
             Container(
               width: double.infinity,
               height: 250,
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 100,
-                  color: AppColors.primary,
-                ),
-              ),
+              child: menu.imageUrl.isNotEmpty
+                  ? (menu.isAsset
+                      ? Image.asset(
+                          menu.imageUrl,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.network(
+                          menu.imageUrl,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.restaurant,
+                                size: 100,
+                                color: AppColors.primary,
+                              ),
+                            );
+                          },
+                        ))
+                  : Center(
+                      child: Icon(
+                        Icons.restaurant,
+                        size: 100,
+                        color: AppColors.primary,
+                      ),
+                    ),
             ),
             // Details
             Padding(
