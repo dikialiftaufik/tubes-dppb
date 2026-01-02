@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
-import 'models.dart';
 import 'services/api_service.dart';
 import 'home_screen.dart';
 import 'menu_screen.dart';
@@ -25,6 +24,16 @@ class _MyReservationScreenState extends State<MyReservationScreen> with TickerPr
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex == 1 ? 3 : 1;
+    _loadData();
+    if (_selectedIndex == 1 || _selectedIndex == 3) {
+      _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialIndex);
+    }
+    // Auto-refresh setiap 30 detik
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _refreshData());
+  }
+
+  void _loadData() {
     _dataFuture = ApiService().getMyReservations();
   }
 
@@ -35,6 +44,7 @@ class _MyReservationScreenState extends State<MyReservationScreen> with TickerPr
   }
 
   Future<void> _refreshData() async {
+    if (!mounted) return;
     setState(() {
       _loadData();
     });
@@ -81,6 +91,7 @@ class _MyReservationScreenState extends State<MyReservationScreen> with TickerPr
         future: _dataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError) return Center(child: Text("Error loading data: ${snapshot.error}"));
           if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text("Belum ada reservasi"));
 
           final all = snapshot.data!;
