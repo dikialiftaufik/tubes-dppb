@@ -11,32 +11,41 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Controller untuk mengambil input text
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController(); 
   
   final ApiService _apiService = ApiService();
-  bool _isLoading = false;
-  bool _isObscure = true;
-  bool _isObscureConfirm = true; // Variable terpisah untuk mata di konfirmasi password
+  bool _isLoading = false; // Untuk loading state
+  bool _isObscure = true; // Untuk sembunyikan password
+  bool _isObscureConfirm = true; // Untuk sembunyikan konfirmasi password
 
+  // Fungsi untuk menangani proses registrasi
   void _handleRegister() async {
+    // 1. Validasi Input Kosong
     if (_nameController.text.isEmpty || 
         _emailController.text.isEmpty || 
         _passwordController.text.isEmpty || 
         _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Semua kolom wajib diisi!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Semua kolom wajib diisi!'))
+      );
       return;
     }
 
+    // 2. Validasi Kesamaan Password
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Konfirmasi password tidak cocok!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konfirmasi password tidak cocok!'))
+      );
       return;
     }
 
     setState(() => _isLoading = true);
 
+    // 3. Panggil API Register
     bool success = await _apiService.register(
       _nameController.text,
       _emailController.text,
@@ -45,25 +54,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = false);
 
+    // 4. Cek Hasil
     if (success && mounted) {
+      // Tampilkan Dialog Sukses (Konsisten dengan Feedback Screen)
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text("Berhasil"),
-          content: const Text("Akun berhasil dibuat! Silakan login."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Tutup dialog
-                Navigator.pop(context); // Kembali ke Login Screen
-              },
-              child: const Text("Login Sekarang"),
-            )
-          ],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          contentPadding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // Agar dialog tidak memenuhi layar
+            children: [
+              // Ikon Ceklis Besar
+              const Icon(Icons.check_circle_outline, color: Colors.green, size: 70),
+              const SizedBox(height: 16),
+              
+              Text(
+                "Berhasil",
+                style: GoogleFonts.poppins(
+                  fontSize: 22, 
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              Text(
+                "Akun berhasil dibuat! Silakan login.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              
+              // Tombol OK
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context); // Tutup dialog
+                    Navigator.pop(context); // Kembali ke Login Screen
+                  },
+                  child: Text(
+                    "Login Sekarang", 
+                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registrasi Gagal. Email mungkin sudah terpakai.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registrasi Gagal. Email mungkin sudah terpakai.'))
+      );
     }
   }
 
@@ -79,8 +127,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // Ratakan teks ke kiri
           children: [
-            // Nama
+            // --- HEADER TEXT ---
+            Text(
+              "Buat Akun Baru",
+              style: GoogleFonts.poppins(
+                fontSize: 20, 
+                fontWeight: FontWeight.bold, 
+                color: AppColors.secondary
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Silakan lengkapi data diri Anda untuk bergabung dengan kami.",
+              style: GoogleFonts.poppins(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 30),
+            // --------------------------------------
+
+            // Input Nama
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -91,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
             
-            // Email
+            // Input Email
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
@@ -102,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
             
-            // Password
+            // Input Password
             TextField(
               controller: _passwordController,
               obscureText: _isObscure,
@@ -118,7 +184,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Konfirmasi Password
+            // Input Konfirmasi Password
             TextField(
               controller: _confirmPasswordController,
               obscureText: _isObscureConfirm,
@@ -134,7 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Tombol
+            // Tombol Daftar
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -146,7 +212,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 child: _isLoading 
                   ? const CircularProgressIndicator(color: Colors.white) 
-                  : Text("Daftar", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  : Text(
+                      "Daftar", 
+                      style: GoogleFonts.poppins(
+                        fontSize: 16, 
+                        fontWeight: FontWeight.bold, 
+                        color: Colors.white
+                      )
+                    ),
               ),
             ),
           ],
