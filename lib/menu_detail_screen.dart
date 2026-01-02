@@ -221,22 +221,46 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Show snackbar
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${widget.menuItem.name} x$_quantity ditambahkan ke keranjang',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor: Colors.green,
-                            duration: const Duration(seconds: 2),
-                          ),
+                      onPressed: () async {
+                        // Show loading dialog
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(child: CircularProgressIndicator()),
                         );
-                        // Pop setelah 500ms
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (mounted) Navigator.pop(context);
-                        });
+
+                        final result = await _apiService.addToCart(widget.menuItem.id, _quantity);
+                        
+                        if (mounted) {
+                          Navigator.pop(context); // Close loading dialog
+                          
+                          if (result['success'] == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${widget.menuItem.name} x$_quantity ditambahkan ke keranjang',
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                            Future.delayed(const Duration(milliseconds: 1000), () {
+                              if (mounted) Navigator.pop(context);
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Gagal: ${result['message']}',
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                          }
+                        }
                       },
                       icon: const Icon(Icons.shopping_cart),
                       label: Text(
@@ -247,7 +271,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                         ),
                       ),
                       style: AppStyles.primaryButtonStyle.copyWith(
-                        minimumSize: MaterialStateProperty.all(
+                        minimumSize: WidgetStateProperty.all(
                           const Size.fromHeight(50),
                         ),
                       ),

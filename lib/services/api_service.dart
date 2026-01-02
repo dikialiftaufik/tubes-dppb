@@ -8,6 +8,9 @@ import '../constants.dart';
 import '../models.dart';
 
 class ApiService {
+  static final List<CartItem> _localCart = [];
+  static int _localCartIdCounter = 1;
+
   // Helper: Ambil Token dari penyimpanan lokal
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -273,70 +276,50 @@ class ApiService {
   // ---------------- CART ----------------
 
   Future<List<CartItem>> getCart() async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.get(
-        Uri.parse('${AppConstants.baseUrl}/cart'),
-        headers: headers,
-      );
+    return List.from(_localCart);
+  }
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        List<dynamic> itemsData = [];
-        if (json is Map && json.containsKey('data')) {
-          itemsData = json['data'];
-        } else if (json is List) {
-          itemsData = json;
-        }
-        return itemsData.map((item) => CartItem.fromJson(item)).toList();
+  Future<Map<String, dynamic>> addToCart(int menuId, int quantity) async {
+    try {
+      // Find menu item first (we need the full object)
+      final allMenus = await getMenus();
+      final menuItem = allMenus.firstWhere((m) => m.id == menuId);
+
+      // Check if already in cart
+      int index = _localCart.indexWhere((item) => item.menuItem.id == menuId);
+      if (index != -1) {
+        _localCart[index].quantity += quantity;
+      } else {
+        _localCart.add(CartItem(
+          id: _localCartIdCounter++,
+          menuItem: menuItem,
+          quantity: quantity,
+        ));
       }
+      return {'success': true};
     } catch (e) {
-      print("Error Get Cart: $e");
+      print("Error Add to Local Cart: $e");
+      return {'success': false, 'message': 'Menu tidak ditemukan'};
     }
-    return [];
   }
 
   Future<bool> updateCartItem(int id, int quantity) async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.put(
-        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
-        headers: headers,
-        body: jsonEncode({'jumlah': quantity}),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      print("Error Update Cart Item: $e");
-      return false;
+    int index = _localCart.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      _localCart[index].quantity = quantity;
+      return true;
     }
+    return false;
   }
 
   Future<bool> removeCartItem(int id) async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.delete(
-        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
-        headers: headers,
-      );
-      return response.statusCode == 200 || response.statusCode == 204;
-    } catch (e) {
-      print("Error Remove Cart Item: $e");
-      return false;
-    }
+    _localCart.removeWhere((item) => item.id == id);
+    return true;
   }
 
   Future<bool> clearCart() async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.delete(
-        Uri.parse('${AppConstants.baseUrl}/cart'),
-        headers: headers,
-      );
-      return response.statusCode == 200 || response.statusCode == 204;
-    } catch (e) {
-      print("Error Clear Cart: $e");
-      return false;
-    }
+    _localCart.clear();
+    return true;
   }
 
   // ---------------- ORDERS ----------------
@@ -365,25 +348,48 @@ class ApiService {
     return [];
   }
 
-  Future<bool> createOrder({
+  Future<Map<String, dynamic>> createOrder({
     required double totalPrice,
     required String paymentStatus,
+    required String paymentMethod,
+    required List<CartItem> items,
   }) async {
     try {
       final headers = await getHeaders();
+      final userId = await getUserId();
+      
+      final body = jsonEncode({
+        'id_user': userId,
+        'total_hrg': totalPrice,
+        'status_pembayaran': paymentStatus,
+        'status_pesanan': 'diproses',
+        'metode_pembayaran': paymentMethod,
+        'detail_pesanan': items.map((item) => {
+          'id_menu': item.menuItem.id,
+          'jumlah': item.quantity,
+        }).toList(),
+      });
+
+      print("Create Order Request: ${AppConstants.baseUrl}/pesanan");
+      print("Create Order Body: $body");
+
       final response = await http.post(
         Uri.parse('${AppConstants.baseUrl}/pesanan'),
         headers: headers,
-        body: jsonEncode({
-          'total_hrg': totalPrice,
-          'status_pembayaran': paymentStatus,
-          'status_pesanan': 'diproses',
-        }),
+        body: body,
       );
-      return response.statusCode == 201 || response.statusCode == 200;
+
+      print("Create Order Status: ${response.statusCode}");
+      print("Create Order Response: ${response.body}");
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return {'success': true};
+      } else {
+        return {'success': false, 'message': response.body};
+      }
     } catch (e) {
       print("Error Create Order: $e");
-      return false;
+      return {'success': false, 'message': e.toString()};
     }
   }
 
@@ -394,7 +400,7 @@ class ApiService {
   Future<List<Reservation>> getReservations() async {
     try {
       final headers = await getHeaders();
-      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservations'), headers: headers);
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservasi'), headers: headers);
       
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
@@ -416,7 +422,7 @@ class ApiService {
   Future<List<dynamic>> getMyReservations() async {
     try {
       final headers = await getHeaders();
-      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservations'), headers: headers);
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservasi'), headers: headers);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json is Map && json.containsKey('data')) return json['data'];
@@ -439,7 +445,7 @@ class ApiService {
       final headers = await getHeaders();
       final userId = await getUserId();
       final response = await http.post(
-        Uri.parse('${AppConstants.baseUrl}/reservations'),
+        Uri.parse('${AppConstants.baseUrl}/reservasi'),
         headers: headers,
         body: jsonEncode({
           'tgl_reservasi': tglReservasi,

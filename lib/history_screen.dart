@@ -72,8 +72,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             tabs: const [
-              Tab(text: 'Pesanan'),
-              Tab(text: 'Reservasi'),
+              Tab(text: 'Riwayat Pesanan'),
+              Tab(text: 'Riwayat Reservasi'),
             ],
           ),
         ),

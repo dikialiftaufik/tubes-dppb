@@ -148,146 +148,156 @@ class _CartScreenState extends State<CartScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       color: const Color(0xFFFFF4D3),
-      elevation: 6,
-      shadowColor: Colors.black26,
+      elevation: 4,
+      shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // FOTO MENU
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: item.menuItem.imageUrl.isNotEmpty
-                  ? item.menuItem.isAsset
-                      ? Image.asset(
-                          item.menuItem.imageUrl,
-                          width: 85,
-                          height: 85,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.network(
-                          item.menuItem.imageUrl,
-                          width: 85,
-                          height: 85,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 85,
-                              height: 85,
-                              color: AppColors.primary.withOpacity(0.1),
-                              child: Icon(Icons.restaurant,
-                                  color: AppColors.primary),
-                            );
-                          },
-                        )
-                  : Container(
-                      width: 85,
-                      height: 85,
-                      color: AppColors.primary.withOpacity(0.1),
-                      child: Icon(Icons.restaurant, color: AppColors.primary),
-                    ),
-            ),
-
-            const SizedBox(width: 12),
-
-            // INFO MENU + QTY
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.menuItem.name,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: AppColors.secondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Rp ${formatRupiah(item.menuItem.price)} / porsi',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // QUANTITY
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8F8F8),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: item.quantity > 1
-                              ? () => _updateQuantity(index, item.quantity - 1)
-                              : null,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.remove, size: 20),
-                          ),
-                        ),
-                        Container(
-                          width: 35,
-                          alignment: Alignment.center,
-                          child: Text(
-                            item.quantity.toString(),
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () => _updateQuantity(index, item.quantity + 1),
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.add, size: 20),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // HAPUS ITEM + TOTAL HARGA
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red),
-                  onPressed: () => _removeItem(index),
+                // FOTO MENU
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: item.menuItem.imageUrl.isNotEmpty
+                      ? item.menuItem.isAsset
+                          ? Image.asset(
+                              item.menuItem.imageUrl,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.network(
+                              item.menuItem.imageUrl,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  child: Icon(Icons.restaurant,
+                                      color: AppColors.primary),
+                                );
+                              },
+                            )
+                      : Container(
+                          width: 80,
+                          height: 80,
+                          color: AppColors.primary.withOpacity(0.1),
+                          child: Icon(Icons.restaurant, color: AppColors.primary),
+                        ),
                 ),
-                Text(
-                  'Rp ${formatRupiah(item.totalPrice)}',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.primary,
+
+                const SizedBox(width: 12),
+
+                // INFO MENU + QTY
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.menuItem.name,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.secondary,
+                        ),
+                      ),
+                      Text(
+                        'Rp ${formatRupiah(item.menuItem.price)} / porsi',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // QUANTITY
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: item.quantity > 1
+                                  ? () => _updateQuantity(index, item.quantity - 1)
+                                  : null,
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                alignment: Alignment.center,
+                                child: Icon(Icons.remove, size: 18, color: item.quantity > 1 ? AppColors.primary : Colors.grey),
+                              ),
+                            ),
+                            Container(
+                              width: 30,
+                              alignment: Alignment.center,
+                              child: Text(
+                                item.quantity.toString(),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () => _updateQuantity(index, item.quantity + 1),
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                alignment: Alignment.center,
+                                child: Icon(Icons.add, size: 18, color: AppColors.primary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // TOTAL HARGA ITEM
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Text(
+                    'Rp ${formatRupiah(item.totalPrice)}',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          // TOMBOL HAPUS (POJOK KANAN ATAS)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.red, size: 20),
+              onPressed: () => _removeItem(index),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -352,12 +362,18 @@ class _CartScreenState extends State<CartScreen> {
                     _loadCart();
                   }
                 },
-                style: AppStyles.primaryButtonStyle,
+                style: AppStyles.primaryButtonStyle.copyWith(
+                  shape: WidgetStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
                 child: Text(
                   'Lanjut ke Pembayaran',
                   style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
               ),
