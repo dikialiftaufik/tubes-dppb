@@ -136,7 +136,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                     crossAxisCount: crossAxisCount,
                                     crossAxisSpacing: 12,
                                     mainAxisSpacing: 12,
-                                    childAspectRatio: 0.68,
+                                    childAspectRatio: 0.82, // Diubah dari 0.68 agar lebih pendek
                                   ),
                                   itemCount: allMenuItems.length,
                                   itemBuilder: (context, index) {
@@ -224,7 +224,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min, // Sesuai permintaan: pas kan saja
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

@@ -235,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Text(
-                                'Rp ${menu.price.toStringAsFixed(0)}',
+                                currencyFormatter.format(menu.price),
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,

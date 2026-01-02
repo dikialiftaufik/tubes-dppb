@@ -53,6 +53,9 @@ class ApiService {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
+      print("Login Status Code: ${response.statusCode}");
+      print("Login Response Body: ${response.body}");
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final prefs = await SharedPreferences.getInstance();
@@ -68,6 +71,7 @@ class ApiService {
       }
       return false;
     } catch (e) {
+      print("Login Error Exception: $e");
       return false;
     }
   }
@@ -242,22 +246,23 @@ class ApiService {
     return [];
   }
 
-  // ---------------- MENU (HOMESCREEN) ----------------
-  // (Bagian ini yang sebelumnya hilang)
-
-  Future<List<dynamic>> getMenu() async {
+  // ---------------- MENU ----------------
+  
+  // Renamed from getMenu to getMenus to match UI
+  Future<List<MenuItem>> getMenus() async {
     try {
       final headers = await getHeaders();
       final response = await http.get(Uri.parse('${AppConstants.baseUrl}/menu'), headers: headers);
       
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        // Cek struktur JSON, ambil key 'data' jika ada
+        List<dynamic> data = [];
         if (json is Map && json.containsKey('data')) {
-          return json['data'];
+          data = json['data'];
         } else if (json is List) {
-          return json;
+          data = json;
         }
+        return data.map((item) => MenuItem.fromJson(item)).toList();
       }
     } catch (e) {
       print("Error Get Menu: $e");
@@ -265,18 +270,141 @@ class ApiService {
     return [];
   }
 
-  Future<List<dynamic>> getMyReservations() async {
+  // ---------------- CART ----------------
+
+  Future<List<CartItem>> getCart() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/cart'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        List<dynamic> itemsData = [];
+        if (json is Map && json.containsKey('data')) {
+          itemsData = json['data'];
+        } else if (json is List) {
+          itemsData = json;
+        }
+        return itemsData.map((item) => CartItem.fromJson(item)).toList();
+      }
+    } catch (e) {
+      print("Error Get Cart: $e");
+    }
+    return [];
+  }
+
+  Future<bool> updateCartItem(int id, int quantity) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.put(
+        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
+        headers: headers,
+        body: jsonEncode({'jumlah': quantity}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error Update Cart Item: $e");
+      return false;
+    }
+  }
+
+  Future<bool> removeCartItem(int id) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.delete(
+        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
+        headers: headers,
+      );
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      print("Error Remove Cart Item: $e");
+      return false;
+    }
+  }
+
+  Future<bool> clearCart() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.delete(
+        Uri.parse('${AppConstants.baseUrl}/cart'),
+        headers: headers,
+      );
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      print("Error Clear Cart: $e");
+      return false;
+    }
+  }
+
+  // ---------------- ORDERS ----------------
+
+  Future<List<Order>> getOrders() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/pesanan'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        List<dynamic> ordersData = [];
+        if (json is Map && json.containsKey('data')) {
+          ordersData = json['data'];
+        } else if (json is List) {
+          ordersData = json;
+        }
+        return ordersData.map((item) => Order.fromJson(item)).toList();
+      }
+    } catch (e) {
+      print("Error Get Orders: $e");
+    }
+    return [];
+  }
+
+  Future<bool> createOrder({
+    required double totalPrice,
+    required String paymentStatus,
+  }) async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}/pesanan'),
+        headers: headers,
+        body: jsonEncode({
+          'total_hrg': totalPrice,
+          'status_pembayaran': paymentStatus,
+          'status_pesanan': 'diproses',
+        }),
+      );
+      return response.statusCode == 201 || response.statusCode == 200;
+    } catch (e) {
+      print("Error Create Order: $e");
+      return false;
+    }
+  }
+
+  // ---------------- RESERVATIONS ----------------
+
+  // Renamed from getMyReservations to getReservations to match UI
+  // and changed return type to List<Reservation> as expected by HistoryScreen
+  Future<List<Reservation>> getReservations() async {
     try {
       final headers = await getHeaders();
       final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservations'), headers: headers);
       
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
+        List<dynamic> data = [];
         if (json is Map && json.containsKey('data')) {
-          return json['data'];
+          data = json['data'];
         } else if (json is List) {
-          return json;
+          data = json;
         }
+        return data.map((item) => Reservation.fromJson(item)).toList();
       }
     } catch (e) {
       print("Error Get Reservations: $e");
@@ -284,14 +412,20 @@ class ApiService {
     return [];
   }
 
-  Future<String?> getUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userName');
-  }
-
-  Future<int?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('userId');
+  // Compatibility wrapper for older screens
+  Future<List<dynamic>> getMyReservations() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservations'), headers: headers);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json is Map && json.containsKey('data')) return json['data'];
+        if (json is List) return json;
+      }
+    } catch (e) {
+      print("Error Get My Reservations: $e");
+    }
+    return [];
   }
 
   Future<bool> createReservation({
@@ -327,117 +461,15 @@ class ApiService {
     }
   }
 
-  // ---------------- CART METHODS ----------------
-  Future<List<CartItem>> getCart() async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.get(
-        Uri.parse('${AppConstants.baseUrl}/cart'),
-        headers: headers,
-      );
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final data = json['data'] ?? [];
-        return data.map<CartItem>((item) => CartItem.fromJson(item)).toList();
-      }
-    } catch (e) {
-      print("Get Cart Error: $e");
-    }
-    return [];
+  // ---------------- HELPERS ----------------
+
+  Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName');
   }
 
-  Future<bool> updateCartItem(int id, int quantity) async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.put(
-        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
-        headers: headers,
-        body: jsonEncode({'quantity': quantity}),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      print("Update Cart Item Error: $e");
-      return false;
-    }
-  }
-
-  Future<bool> removeCartItem(int id) async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.delete(
-        Uri.parse('${AppConstants.baseUrl}/cart/$id'),
-        headers: headers,
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      print("Remove Cart Item Error: $e");
-      return false;
-    }
-  }
-
-  Future<bool> clearCart() async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.delete(
-        Uri.parse('${AppConstants.baseUrl}/cart'),
-        headers: headers,
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      print("Clear Cart Error: $e");
-      return false;
-    }
-  }
-
-  // ---------------- ORDER METHODS ----------------
-  Future<bool> createOrder({
-    required double totalPrice,
-    required String paymentStatus,
-  }) async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.post(
-        Uri.parse('${AppConstants.baseUrl}/checkout'),
-        headers: headers,
-        body: jsonEncode({
-          'total_price': totalPrice,
-          'payment_status': paymentStatus,
-        }),
-      );
-      return response.statusCode == 201 || response.statusCode == 200;
-    } catch (e) {
-      print("Create Order Error: $e");
-      return false;
-    }
-  }
-
-  Future<List<Order>> getOrders() async {
-    try {
-      final headers = await getHeaders();
-      final response = await http.get(
-        Uri.parse('${AppConstants.baseUrl}/riwayat-pesanan'),
-        headers: headers,
-      );
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final data = json['data'] ?? [];
-        return data.map<Order>((item) => Order.fromJson(item)).toList();
-      }
-    } catch (e) {
-      print("Get Orders Error: $e");
-    }
-    return [];
-  }
-
-  // Alias for getMyReservations
-  Future<List<Reservation>> getReservations() async {
-    final data = await getMyReservations();
-    return data.map<Reservation>((item) => Reservation.fromJson(item)).toList();
-  }
-
-  // Alias for getMenu
-  Future<List<MenuItem>> getMenus() async {
-    final data = await getMenu();
-    return data.map<MenuItem>((item) => MenuItem.fromJson(item)).toList();
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userId');
   }
 }
