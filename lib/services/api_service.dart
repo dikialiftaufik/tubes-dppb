@@ -61,6 +61,7 @@ class ApiService {
         if (data['user'] != null) {
           await prefs.setString('userName', data['user']['name']);
           await prefs.setString('userEmail', data['user']['email']);
+          await prefs.setInt('userId', data['user']['id']);
         }
         return true;
       }
@@ -238,5 +239,89 @@ class ApiService {
       print("Notification Error: $e");
     }
     return [];
+  }
+
+  // ---------------- MENU (HOMESCREEN) ----------------
+  // (Bagian ini yang sebelumnya hilang)
+
+  Future<List<dynamic>> getMenu() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/menu'), headers: headers);
+      
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        // Cek struktur JSON, ambil key 'data' jika ada
+        if (json is Map && json.containsKey('data')) {
+          return json['data'];
+        } else if (json is List) {
+          return json;
+        }
+      }
+    } catch (e) {
+      print("Error Get Menu: $e");
+    }
+    return [];
+  }
+
+  Future<List<dynamic>> getMyReservations() async {
+    try {
+      final headers = await getHeaders();
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/reservations'), headers: headers);
+      
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json is Map && json.containsKey('data')) {
+          return json['data'];
+        } else if (json is List) {
+          return json;
+        }
+      }
+    } catch (e) {
+      print("Error Get Reservations: $e");
+    }
+    return [];
+  }
+
+  Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName');
+  }
+
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userId');
+  }
+
+  Future<bool> createReservation({
+    required String tglReservasi,
+    required String jamMulai,
+    required int jmlOrg,
+    required String catatan,
+  }) async {
+    try {
+      final headers = await getHeaders();
+      final userId = await getUserId();
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}/reservations'),
+        headers: headers,
+        body: jsonEncode({
+          'user_id': userId,
+          'tanggal_reservasi': tglReservasi,
+          'waktu_mulai': jamMulai,
+          'jumlah_orang': jmlOrg,
+          'catatan': catatan,
+        }),
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return true;
+      } else {
+        print("Create Reservation Failed: Status ${response.statusCode}, Body: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Create Reservation Error: $e");
+      return false;
+    }
   }
 }

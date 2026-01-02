@@ -5,34 +5,36 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
+  # Icons
   cupertino_icons: ^1.0.8
 
-  http: ^1.2.0
-  shared_preferences: ^2.2.2 # Untuk menyimpan token login
-  intl: ^0.19.0 # Untuk format tanggal notifikasi
+  # Networking & Data
+  http: ^1.1.0
+  intl: ^0.18.0
+  shared_preferences: ^2.2.0
 
-  # Typography
+  # UI & Assets
   google_fonts: ^6.1.0
   image_picker: ^1.0.7
-  
-  # Asset handling
   flutter_svg: ^2.0.9
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0
 
 flutter:
-
   uses-material-design: true
 
+  # Pastikan file gambar kamu ada di folder lib/assets/
   assets:
     - lib/assets/
+
+    

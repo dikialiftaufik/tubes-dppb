@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'constants.dart';
 import 'models.dart';
 import 'services/api_service.dart';
 
 class MenuDetailScreen extends StatefulWidget {
   final MenuItem menuItem;
-
-  const MenuDetailScreen({
-    super.key,
-    required this.menuItem,
-  });
+  const MenuDetailScreen({super.key, required this.menuItem});
 
   @override
   State<MenuDetailScreen> createState() => _MenuDetailScreenState();
@@ -19,47 +16,11 @@ class MenuDetailScreen extends StatefulWidget {
 class _MenuDetailScreenState extends State<MenuDetailScreen> {
   final ApiService _apiService = ApiService();
   int _quantity = 1;
-  bool _isAddingToCart = false;
-
-  Future<void> _addToCart() async {
-    setState(() => _isAddingToCart = true);
-
-    final success = await _apiService.addToCart(widget.menuItem.id, _quantity);
-
-    if (mounted) {
-      setState(() => _isAddingToCart = false);
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${widget.menuItem.name} x$_quantity ditambahkan ke keranjang',
-              style: GoogleFonts.poppins(),
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) Navigator.pop(context, true);
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal menambahkan ke keranjang',
-              style: GoogleFonts.poppins(),
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    final menu = widget.menuItem;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -74,39 +35,20 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image placeholder
             Container(
               width: double.infinity,
               height: 250,
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
               ),
-              child: widget.menuItem.imageUrl.isNotEmpty
-                  ? widget.menuItem.isAsset
-                      ? Image.asset(
-                          widget.menuItem.imageUrl,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.network(
-                          widget.menuItem.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.restaurant,
-                                size: 100,
-                                color: AppColors.primary,
-                              ),
-                            );
-                          },
-                        )
-                  : Center(
-                      child: Icon(
-                        Icons.restaurant,
-                        size: 100,
-                        color: AppColors.primary,
-                      ),
-                    ),
+              child: Center(
+                child: Icon(
+                  Icons.restaurant,
+                  size: 100,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
             // Details
             Padding(
@@ -114,54 +56,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name & Category
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.menuItem.name,
-                              style: GoogleFonts.poppins(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.menuItem.category,
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          widget.menuItem.meat,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  Text(menu.name, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(currencyFormatter.format(menu.price), style: GoogleFonts.poppins(fontSize: 20, color: AppColors.primary, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
 
                   // Description
@@ -205,7 +101,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           ),
                         ),
                         Text(
-                          widget.menuItem.formattedPrice,
+                          'Rp ${widget.menuItem.price.toStringAsFixed(0)}',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -283,7 +179,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           ),
                         ),
                         Text(
-                          'Rp ${formatRupiah(widget.menuItem.price * _quantity)}',
+                          'Rp ${(widget.menuItem.price * _quantity).toStringAsFixed(0)}',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -300,26 +196,33 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: _isAddingToCart ? null : _addToCart,
-                      icon: _isAddingToCart
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.shopping_cart),
+                      onPressed: () {
+                        // Show snackbar
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${widget.menuItem.name} x$_quantity ditambahkan ke keranjang',
+                              style: GoogleFonts.poppins(),
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                        // Pop setelah 500ms
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (mounted) Navigator.pop(context);
+                        });
+                      },
+                      icon: const Icon(Icons.shopping_cart),
                       label: Text(
-                        _isAddingToCart ? 'Menambahkan...' : 'Tambah ke Keranjang',
+                        'Tambah ke Keranjang',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
                       ),
                       style: AppStyles.primaryButtonStyle.copyWith(
-                        minimumSize: WidgetStateProperty.all(
+                        minimumSize: MaterialStateProperty.all(
                           const Size.fromHeight(50),
                         ),
                       ),
