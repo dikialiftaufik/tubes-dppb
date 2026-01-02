@@ -28,17 +28,6 @@ class HomeScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.message, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MenuCatalogScreen(),
-                ),
-              );
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
             onPressed: () {
               Navigator.push(
@@ -158,7 +147,7 @@ class HomeScreen extends StatelessWidget {
                 // DATA FAVORIT + path diperbaiki
                 final favoriteMenus = [
                   MenuItem(
-                    id: '1',
+                    id: 1,
                     name: 'Sate Ayam',
                     category: 'Sate',
                     meat: 'Ayam',
@@ -167,7 +156,7 @@ class HomeScreen extends StatelessWidget {
                     imageUrl: 'lib/assets/sateayam.jpg',
                   ),
                   MenuItem(
-                    id: '2',
+                    id: 2,
                     name: 'Sate Sapi',
                     category: 'Sate',
                     meat: 'Sapi',
@@ -176,7 +165,7 @@ class HomeScreen extends StatelessWidget {
                     imageUrl: 'lib/assets/satesapi.jpg',
                   ),
                   MenuItem(
-                    id: '4',
+                    id: 4,
                     name: 'Tongseng Ayam',
                     category: 'Tongseng',
                     meat: 'Ayam',
@@ -185,7 +174,7 @@ class HomeScreen extends StatelessWidget {
                     imageUrl: 'lib/assets/tongsengayam.jpg',
                   ),
                   MenuItem(
-                    id: '5',
+                    id: 5,
                     name: 'Tongseng Sapi',
                     category: 'Tongseng',
                     meat: 'Sapi',
@@ -228,11 +217,23 @@ class HomeScreen extends StatelessWidget {
                               topLeft: Radius.circular(12),
                               topRight: Radius.circular(12),
                             ),
-                            child: Image.asset(
-                              menu.imageUrl,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
+                            child: menu.isAsset
+                                ? Image.asset(
+                                    menu.imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.network(
+                                    menu.imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Container(
+                                      color: AppColors.primary.withOpacity(0.1),
+                                      child: Icon(Icons.restaurant,
+                                          color: AppColors.primary),
+                                    ),
+                                  ),
                           ),
                         ),
 
@@ -259,7 +260,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                'Rp ${menu.price.toStringAsFixed(0)}',
+                                menu.formattedPrice,
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,

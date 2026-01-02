@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'models.dart';
+import 'services/api_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<CartItem> cartItems;
@@ -18,8 +19,10 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  String _selectedPaymentMethod = 'transfer'; // 'transfer' atau 'qris'
-  String _selectedAddress = 'Jl. Bojongsoang No. 123, Kab Bandung'; // Default address
+  final ApiService _apiService = ApiService();
+  String _selectedPaymentMethod = 'transfer';
+  String _selectedAddress = 'Jl. Bojongsoang No. 123, Kab Bandung';
+  bool _isProcessing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -172,20 +175,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             SizedBox(
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  _showConfirmationDialog();
-                },
+                onPressed: _isProcessing ? null : _showConfirmationDialog,
                 style: AppStyles.primaryButtonStyle.copyWith(
                   minimumSize:
-                      MaterialStateProperty.all(const Size.fromHeight(50)),
+                      WidgetStateProperty.all(const Size.fromHeight(50)),
                 ),
-                child: Text(
-                  'Konfirmasi Pesanan',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
+                child: _isProcessing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Konfirmasi Pesanan',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 16),
@@ -233,13 +236,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Center(
-              child: Icon(
-                Icons.restaurant,
-                size: 24,
-                color: AppColors.primary,
-              ),
-            ),
+            child: item.menuItem.imageUrl.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      item.menuItem.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Icon(
+                            Icons.restaurant,
+                            size: 24,
+                            color: AppColors.primary,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : Center(
+                    child: Icon(
+                      Icons.restaurant,
+                      size: 24,
+                      color: AppColors.primary,
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -256,7 +276,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${item.quantity} x Rp ${item.menuItem.price.toStringAsFixed(0)}',
+                '${item.quantity} x ${item.menuItem.formattedPrice}',
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     color: Colors.grey[600],
@@ -266,7 +286,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           Text(
-            'Rp ${item.totalPrice.toStringAsFixed(0)}',
+            item.formattedTotalPrice,
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
               fontSize: 12,
@@ -376,7 +396,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         Text(
-          'Rp ${price.toStringAsFixed(0)}',
+          'Rp ${formatRupiah(price)}',
           style: GoogleFonts.poppins(
             fontSize: isLarge ? 14 : 12,
             fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
@@ -398,7 +418,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
           content: Text(
-            'Apakah Anda yakin dengan pesanan ini?\n\nMetode pembayaran: ${_selectedPaymentMethod == 'transfer' ? 'Transfer Bank' : 'QRIS'}\nTotal: Rp ${(widget.totalPrice + 10000).toStringAsFixed(0)}',
+            'Apakah Anda yakin dengan pesanan ini?\n\nMetode pembayaran: ${_selectedPaymentMethod == 'transfer' ? 'Transfer Bank' : 'QRIS'}\nTotal: Rp ${formatRupiah(widget.totalPrice + 10000)}',
             style: GoogleFonts.poppins(height: 1.5),
           ),
           actions: [
@@ -412,24 +432,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Pesanan Anda telah dikonfirmasi!',
-                      style: GoogleFonts.poppins(),
-                    ),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-                // Pop to home after delay
-                Future.delayed(const Duration(seconds: 2), () {
-                  if (mounted) {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  }
-                });
+                await _processOrder();
               },
               style: AppStyles.primaryButtonStyle,
               child: Text(
@@ -441,5 +446,51 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
       },
     );
+  }
+
+  Future<void> _processOrder() async {
+    setState(() => _isProcessing = true);
+
+    final success = await _apiService.createOrder(
+      totalPrice: widget.totalPrice + 10000,
+      paymentStatus: 'pending',
+    );
+
+    if (mounted) {
+      setState(() => _isProcessing = false);
+
+      if (success) {
+        // Clear cart after successful order
+        await _apiService.clearCart();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Pesanan Anda telah dikonfirmasi!',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        // Pop to home after delay
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.popUntil(context, (route) => route.isFirst);
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal membuat pesanan. Silakan coba lagi.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 }
