@@ -4,7 +4,8 @@ import 'constants.dart';
 import 'home_screen.dart'; 
 import 'my_reservation_screen.dart';
 import 'menu_screen.dart'; 
-import 'feedback_screen.dart'; 
+import 'feedback_screen.dart';
+import 'history_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,11 +18,11 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 2; 
 
   final List<Widget> _pages = [
-    const MenuScreen(),                         
-    const MyReservationScreen(initialIndex: 0), 
-    const HomeScreen(),                         
-    const MyReservationScreen(initialIndex: 1), 
-    const FeedbackScreen(),                     
+    const MenuScreen(),                         // Index 0: Menu
+    const MyReservationScreen(initialIndex: 0), // Index 1: Reservasi
+    const HomeScreen(),                         // Index 2: Home
+    const HistoryScreen(),                      // Index 3: Riwayat (NEW!)
+    const FeedbackScreen(),                     // Index 4: Feedback
   ];
 
   void _onItemTapped(int index) {

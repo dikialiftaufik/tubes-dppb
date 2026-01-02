@@ -3,70 +3,39 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'models.dart';
 import 'menu_detail_screen.dart';
+import 'services/api_service.dart';
 
-class MenuCatalogScreen extends StatelessWidget {
+class MenuCatalogScreen extends StatefulWidget {
   const MenuCatalogScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Semua menu items
-    final List<MenuItem> allMenuItems = [
-      MenuItem(
-        id: '1',
-        name: 'Sate Ayam',
-        category: 'Sate',
-        meat: 'Ayam',
-        price: 35000,
-        description: 'Sate ayam empuk dengan bumbu kacang yang lezat',
-        imageUrl: 'lib/assets/sateayam.jpg',
-      ),
-      MenuItem(
-        id: '2',
-        name: 'Sate Sapi',
-        category: 'Sate',
-        meat: 'Sapi',
-        price: 45000,
-        description: 'Sate daging sapi premium dengan bumbu tradisional',
-        imageUrl: 'lib/assets/satesapi.jpg',
-      ),
-      MenuItem(
-        id: '3',
-        name: 'Sate Kambing',
-        category: 'Sate',
-        meat: 'Kambing',
-        price: 50000,
-        description: 'Sate kambing empuk dengan aroma harum',
-        imageUrl: 'lib/assets/satekambing.jpg',
-      ),
-      MenuItem(
-        id: '4',
-        name: 'Tongseng Ayam',
-        category: 'Tongseng',
-        meat: 'Ayam',
-        price: 32000,
-        description: 'Tongseng ayam berkuah dengan sayuran segar',
-        imageUrl: 'lib/assets/tongsengayam.jpg',
-      ),
-      MenuItem(
-        id: '5',
-        name: 'Tongseng Sapi',
-        category: 'Tongseng',
-        meat: 'Sapi',
-        price: 42000,
-        description: 'Tongseng daging sapi empuk dengan kuah gurih',
-        imageUrl: 'lib/assets/tongsengsapi.jpg',
-      ),
-      MenuItem(
-        id: '6',
-        name: 'Tongseng Kambing',
-        category: 'Tongseng',
-        meat: 'Kambing',
-        price: 48000,
-        description: 'Tongseng kambing dengan rempah-rempah pilihan',
-        imageUrl: 'lib/assets/tongsengkambing.jpg',
-      ),
-    ];
+  State<MenuCatalogScreen> createState() => _MenuCatalogScreenState();
+}
 
+class _MenuCatalogScreenState extends State<MenuCatalogScreen> {
+  final ApiService _apiService = ApiService();
+  List<MenuItem> allMenuItems = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMenus();
+  }
+
+  Future<void> _loadMenus() async {
+    setState(() => _isLoading = true);
+    final menus = await _apiService.getMenus();
+    if (mounted) {
+      setState(() {
+        allMenuItems = menus;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -87,14 +56,26 @@ class MenuCatalogScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: allMenuItems.length,
-        itemBuilder: (context, index) {
-          final item = allMenuItems[index];
-          return _buildMenuCard(context, item, index);
-        },
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : allMenuItems.isEmpty
+              ? Center(
+                  child: Text(
+                    'Belum ada menu tersedia',
+                    style: GoogleFonts.poppins(color: Colors.grey[600]),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadMenus,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: allMenuItems.length,
+                    itemBuilder: (context, index) {
+                      final item = allMenuItems[index];
+                      return _buildMenuCard(context, item, index);
+                    },
+                  ),
+                ),
     );
   }
 
@@ -109,7 +90,7 @@ class MenuCatalogScreen extends StatelessWidget {
         );
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: index != 5 ? 16 : 0),
+        margin: EdgeInsets.only(bottom: index != allMenuItems.length - 1 ? 16 : 0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -123,18 +104,41 @@ class MenuCatalogScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // IMAGE SEBENARNYA
+            // IMAGE
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 bottomLeft: Radius.circular(12),
               ),
-              child: Image.asset(
-                item.imageUrl,
-                width: 140,
-                height: 140,
-                fit: BoxFit.cover,
-              ),
+              child: item.imageUrl.isNotEmpty
+                  ? item.isAsset
+                      ? Image.asset(
+                          item.imageUrl,
+                          width: 140,
+                          height: 140,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.network(
+                          item.imageUrl,
+                          width: 140,
+                          height: 140,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 140,
+                              height: 140,
+                              color: AppColors.primary.withOpacity(0.1),
+                              child: Icon(Icons.restaurant,
+                                  size: 50, color: AppColors.primary),
+                            );
+                          },
+                        )
+                  : Container(
+                      width: 140,
+                      height: 140,
+                      color: AppColors.primary.withOpacity(0.1),
+                      child: Icon(Icons.restaurant, size: 50, color: AppColors.primary),
+                    ),
             ),
 
             // Info section
@@ -160,7 +164,6 @@ class MenuCatalogScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            // Category badge
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -180,7 +183,6 @@ class MenuCatalogScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // Meat type
                             Text(
                               item.meat,
                               style: GoogleFonts.poppins(
@@ -212,7 +214,7 @@ class MenuCatalogScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Rp ${item.price.toStringAsFixed(0)}',
+                          item.formattedPrice,
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,

@@ -30,10 +30,46 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.primary,
         title: Text('The Komars', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.message, color: Colors.white), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MenuCatalogScreen()))),
-          IconButton(icon: const Icon(Icons.notifications, color: Colors.white), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationScreen()))),
-          IconButton(icon: const Icon(Icons.shopping_cart, color: Colors.white), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()))),
-          IconButton(icon: const Icon(Icons.person, color: Colors.white), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()))),
+          IconButton(
+            icon: const Icon(Icons.message, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MenuCatalogScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -83,72 +119,135 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
 
-            // GRID MENU (DARI API)
-            FutureBuilder<List<dynamic>>(
-              future: ApiService().getMenu(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                if (!snapshot.hasData || snapshot.data!.isEmpty) return const Text("Menu belum tersedia");
-
-                final menus = snapshot.data!.take(4).toList(); // Ambil max 4 menu
-
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.75,
+            // Grid Menu Favorit
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.8,
+              ),
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                // DATA FAVORIT + path diperbaiki
+                final favoriteMenus = [
+                  MenuItem(
+                    id: '1',
+                    name: 'Sate Ayam',
+                    category: 'Sate',
+                    meat: 'Ayam',
+                    price: 35000,
+                    description: 'Sate ayam empuk dengan bumbu kacang.',
+                    imageUrl: 'lib/assets/sateayam.jpg',
                   ),
-                  itemCount: menus.length,
-                  itemBuilder: (context, index) {
-                    final item = menus[index];
-                    // Construct URL Gambar yang Benar
-                    String rawFoto = item['foto'] ?? '';
-                    String imageUrl = rawFoto.startsWith('http') 
-                        ? rawFoto 
-                        : "${AppConstants.baseUrl.replaceAll('/api', '')}/storage/$rawFoto";
+                  MenuItem(
+                    id: '2',
+                    name: 'Sate Sapi',
+                    category: 'Sate',
+                    meat: 'Sapi',
+                    price: 45000,
+                    description: 'Sate sapi premium.',
+                    imageUrl: 'lib/assets/satesapi.jpg',
+                  ),
+                  MenuItem(
+                    id: '4',
+                    name: 'Tongseng Ayam',
+                    category: 'Tongseng',
+                    meat: 'Ayam',
+                    price: 32000,
+                    description: 'Tongseng ayam kuah segar.',
+                    imageUrl: 'lib/assets/tongsengayam.jpg',
+                  ),
+                  MenuItem(
+                    id: '5',
+                    name: 'Tongseng Sapi',
+                    category: 'Tongseng',
+                    meat: 'Sapi',
+                    price: 42000,
+                    description: 'Tongseng sapi kuah gurih.',
+                    imageUrl: 'lib/assets/tongsengsapi.jpg',
+                  ),
+                ];
 
-                    // Buat Objek MenuItem
-                    final menuItem = MenuItem(
-                      id: item['id'].toString(),
-                      name: item['nama_menu'] ?? 'Menu',
-                      category: item['kategori'] ?? 'Umum',
-                      meat: item['daging'] ?? item['meat'] ?? '',
-                      price: double.tryParse(item['harga'].toString()) ?? 0,
-                      description: item['deskripsi'] ?? '',
-                      imageUrl: imageUrl, 
-                    );
+                final menu = favoriteMenus[index];
 
-                    return GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MenuDetailScreen(menuItem: menuItem))),
-                      child: Container(
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5)]),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                                child: Image.network(imageUrl, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(color: Colors.grey[200], child: const Icon(Icons.fastfood))),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(menuItem.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  Text(currencyFormatter.format(menuItem.price), style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primary)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MenuDetailScreen(menuItem: menu),
                       ),
                     );
                   },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // GAMBAR SEBENARNYA
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
+                            ),
+                            child: Image.asset(
+                              menu.imageUrl,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                menu.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: AppColors.secondary,
+                                ),
+                              ),
+                              Text(
+                                menu.meat,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                'Rp ${menu.price.toStringAsFixed(0)}',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),

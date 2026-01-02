@@ -3,14 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'models.dart';
 import 'checkout_screen.dart';
+import 'services/api_service.dart';
 
-// ==== FUNCTION FORMAT RUPIAH ====
-String formatRupiah(double number) {
-  return number.toStringAsFixed(0).replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-    (Match m) => '${m[1]}.',
-  );
-}
+// CartScreen uses models.dart's formatRupiah
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -20,36 +15,53 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // Dummy cart data
-  final List<CartItem> cartItems = [
-    CartItem(
-      menuItem: MenuItem(
-        id: '1',
-        name: 'Sate Ayam',
-        category: 'Sate',
-        meat: 'Ayam',
-        price: 35000,
-        description: 'Sate ayam empuk dengan bumbu kacang yang lezat',
-        imageUrl: 'lib/assets/sateayam.jpg',
-      ),
-      quantity: 2,
-    ),
-    CartItem(
-      menuItem: MenuItem(
-        id: '5',
-        name: 'Tongseng Sapi',
-        category: 'Tongseng',
-        meat: 'Sapi',
-        price: 42000,
-        description: 'Tongseng daging sapi empuk dengan kuah gurih',
-        imageUrl: 'lib/assets/tongsengsapi.jpg',
-      ),
-      quantity: 1,
-    ),
-  ];
+  final ApiService _apiService = ApiService();
+  List<CartItem> cartItems = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCart();
+  }
+
+  Future<void> _loadCart() async {
+    setState(() => _isLoading = true);
+    final items = await _apiService.getCart();
+    if (mounted) {
+      setState(() {
+        cartItems = items;
+        _isLoading = false;
+      });
+    }
+  }
 
   double get totalPrice =>
       cartItems.fold(0, (sum, item) => sum + item.totalPrice);
+
+  Future<void> _updateQuantity(int index, int newQuantity) async {
+    if (newQuantity < 1) return;
+    
+    final item = cartItems[index];
+    final success = await _apiService.updateCartItem(item.id, newQuantity);
+    
+    if (success && mounted) {
+      setState(() {
+        cartItems[index].quantity = newQuantity;
+      });
+    }
+  }
+
+  Future<void> _removeItem(int index) async {
+    final item = cartItems[index];
+    final success = await _apiService.removeCartItem(item.id);
+    
+    if (success && mounted) {
+      setState(() {
+        cartItems.removeAt(index);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,24 +83,30 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ),
       ),
-      body: cartItems.isEmpty
-          ? _buildEmptyCart()
-          : Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: List.generate(
-                        cartItems.length,
-                        (index) => _buildCartItem(index),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : cartItems.isEmpty
+              ? _buildEmptyCart()
+              : Column(
+                  children: [
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _loadCart,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: List.generate(
+                              cartItems.length,
+                              (index) => _buildCartItem(index),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    _buildCheckoutSection(),
+                  ],
                 ),
-                _buildCheckoutSection(),
-              ],
-            ),
     );
   }
 
@@ -124,15 +142,12 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  // ===========================
-  // CART ITEM (SUDAH DIPERBAIKI)
-  // ===========================
   Widget _buildCartItem(int index) {
     final item = cartItems[index];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
-      color: const Color(0xFFFFF4D3), // lebih soft dari sebelumnya
+      color: const Color(0xFFFFF4D3),
       elevation: 6,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(
@@ -146,12 +161,35 @@ class _CartScreenState extends State<CartScreen> {
             // FOTO MENU
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                item.menuItem.imageUrl,
-                width: 85,
-                height: 85,
-                fit: BoxFit.cover,
-              ),
+              child: item.menuItem.imageUrl.isNotEmpty
+                  ? item.menuItem.isAsset
+                      ? Image.asset(
+                          item.menuItem.imageUrl,
+                          width: 85,
+                          height: 85,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.network(
+                          item.menuItem.imageUrl,
+                          width: 85,
+                          height: 85,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 85,
+                              height: 85,
+                              color: AppColors.primary.withOpacity(0.1),
+                              child: Icon(Icons.restaurant,
+                                  color: AppColors.primary),
+                            );
+                          },
+                        )
+                  : Container(
+                      width: 85,
+                      height: 85,
+                      color: AppColors.primary.withOpacity(0.1),
+                      child: Icon(Icons.restaurant, color: AppColors.primary),
+                    ),
             ),
 
             const SizedBox(width: 12),
@@ -179,9 +217,7 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // ==========================
-                  // QUANTITY TIDAK MELEBAR
-                  // ==========================
+                  // QUANTITY
                   Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8F8F8),
@@ -191,15 +227,10 @@ class _CartScreenState extends State<CartScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Tombol -
                         InkWell(
                           borderRadius: BorderRadius.circular(8),
                           onTap: item.quantity > 1
-                              ? () {
-                                  setState(() {
-                                    item.quantity--;
-                                  });
-                                }
+                              ? () => _updateQuantity(index, item.quantity - 1)
                               : null,
                           child: Container(
                             width: 32,
@@ -208,8 +239,6 @@ class _CartScreenState extends State<CartScreen> {
                             child: const Icon(Icons.remove, size: 20),
                           ),
                         ),
-
-                        // Angka qty
                         Container(
                           width: 35,
                           alignment: Alignment.center,
@@ -222,15 +251,9 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                           ),
                         ),
-
-                        // Tombol +
                         InkWell(
                           borderRadius: BorderRadius.circular(8),
-                          onTap: () {
-                            setState(() {
-                              item.quantity++;
-                            });
-                          },
+                          onTap: () => _updateQuantity(index, item.quantity + 1),
                           child: Container(
                             width: 32,
                             height: 32,
@@ -251,11 +274,7 @@ class _CartScreenState extends State<CartScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      cartItems.removeAt(index);
-                    });
-                  },
+                  onPressed: () => _removeItem(index),
                 ),
                 Text(
                   'Rp ${formatRupiah(item.totalPrice)}',
@@ -273,9 +292,6 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  // ======================
-  // CHECKOUT SECTION
-  // ======================
   Widget _buildCheckoutSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -321,8 +337,8 @@ class _CartScreenState extends State<CartScreen> {
               height: 50,
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => CheckoutScreen(
@@ -331,6 +347,10 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ),
                   );
+                  // Reload cart if order was placed
+                  if (result == true && mounted) {
+                    _loadCart();
+                  }
                 },
                 style: AppStyles.primaryButtonStyle,
                 child: Text(

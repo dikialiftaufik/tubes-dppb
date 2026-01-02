@@ -5,6 +5,7 @@ import 'constants.dart';
 import 'login_screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
+  // Menerima data email dan token dari halaman sebelumnya
   final String? initialEmail;
   final String? initialToken;
 
@@ -15,6 +16,7 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  // Controller Text Field
   late TextEditingController _emailController;
   late TextEditingController _tokenController;
   final _passwordController = TextEditingController();
@@ -22,35 +24,40 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   
   final ApiService _apiService = ApiService();
   
-  bool _isLoading = false;
+  bool _isLoading = false; // State untuk loading
   
-  // State Visibilitas untuk masing-masing field
-  bool _isTokenVisible = false;           // Default tersembunyi
-  bool _isPasswordVisible = false;        // Default tersembunyi
-  bool _isConfirmPasswordVisible = false; // Default tersembunyi
+  // State Visibilitas Password (Toggle Mata)
+  bool _isTokenVisible = false;           
+  bool _isPasswordVisible = false;        
+  bool _isConfirmPasswordVisible = false; 
 
   @override
   void initState() {
     super.initState();
+    // Isi otomatis jika ada data yang dikirim dari halaman sebelumnya
     _emailController = TextEditingController(text: widget.initialEmail ?? '');
     _tokenController = TextEditingController(text: widget.initialToken ?? '');
   }
 
   void _handleReset() async {
-    // Validasi
+    // 1. Validasi Input
     if (_passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password baru wajib diisi')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password baru wajib diisi'))
+      );
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Konfirmasi password tidak cocok')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konfirmasi password tidak cocok'))
+      );
       return;
     }
 
     setState(() => _isLoading = true);
     
-    // Panggil API
+    // 2. Panggil API Reset Password
     bool success = await _apiService.resetPassword(
       _emailController.text,
       _tokenController.text,
@@ -59,31 +66,69 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     setState(() => _isLoading = false);
 
+    // 3. Cek Hasil
     if (success && mounted) {
+      // Tampilkan Alert Dialog Sukses (Konsisten dengan Register/Feedback)
       showDialog(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: false, // User harus tekan tombol Login
         builder: (context) => AlertDialog(
-          title: const Text("Berhasil"),
-          content: const Text("Password berhasil diubah! Silakan login dengan password baru."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  (route) => false,
-                );
-              },
-              child: const Text("Login Sekarang"),
-            )
-          ],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          contentPadding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ikon Ceklis Hijau
+              const Icon(Icons.check_circle_outline, color: Colors.green, size: 70),
+              const SizedBox(height: 16),
+              
+              Text(
+                "Berhasil",
+                style: GoogleFonts.poppins(
+                  fontSize: 22, 
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              Text(
+                "Password berhasil diubah! Silakan login dengan password baru.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              
+              // Tombol Login Sekarang
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context); // Tutup dialog
+                    
+                    // Kembali ke Login Screen dan hapus history navigasi sebelumnya
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  child: Text(
+                    "Login Sekarang", 
+                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal reset password. Pastikan Token valid.')),
+        const SnackBar(content: Text('Gagal reset password. Pastikan Token valid.'))
       );
     }
   }
@@ -102,9 +147,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- HEADER TEXT ---
             Text(
               "Langkah Terakhir",
-              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.secondary),
+              style: GoogleFonts.poppins(
+                fontSize: 20, 
+                fontWeight: FontWeight.bold, 
+                color: AppColors.secondary
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -114,10 +164,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             const SizedBox(height: 30),
 
             // --- Field Email (READ ONLY) ---
+            // Ditampilkan agar user yakin akun mana yang sedang di-reset
             TextField(
               controller: _emailController,
               readOnly: true, // Tidak bisa diedit
-              style: TextStyle(color: Colors.grey[700]), // Text agak abu
+              style: TextStyle(color: Colors.grey[700]), 
               decoration: InputDecoration(
                 labelText: "Email",
                 prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
@@ -134,7 +185,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             // --- Field Token ---
             TextField(
               controller: _tokenController,
-              obscureText: !_isTokenVisible, // Token tersembunyi by default
+              obscureText: !_isTokenVisible, // Bisa di-toggle visibility-nya
               decoration: InputDecoration(
                 labelText: "Token Reset",
                 prefixIcon: const Icon(Icons.vpn_key_outlined),
@@ -191,7 +242,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 child: _isLoading 
                   ? const CircularProgressIndicator(color: Colors.white) 
-                  : Text("Simpan Password", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+                  : Text(
+                      "Simpan Password", 
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold, 
+                        color: Colors.white
+                      )
+                    ),
               ),
             ),
           ],
