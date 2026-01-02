@@ -4,6 +4,7 @@ import 'constants.dart';
 import 'models.dart';
 import 'menu_detail_screen.dart';
 import 'cart_screen.dart';
+import 'services/api_service.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -13,70 +14,43 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  // Dummy menu data
-  final List<MenuItem> allMenuItems = [
-    MenuItem(
-      id: '1',
-      name: 'Sate Ayam',
-      category: 'Sate',
-      meat: 'Ayam',
-      price: 35000,
-      description: 'Sate ayam empuk dengan bumbu kacang yang lezat',
-      imageUrl: 'assets/sate_ayam.png',
-    ),
-    MenuItem(
-      id: '2',
-      name: 'Sate Sapi',
-      category: 'Sate',
-      meat: 'Sapi',
-      price: 45000,
-      description: 'Sate daging sapi premium dengan bumbu tradisional',
-      imageUrl: 'assets/sate_sapi.png',
-    ),
-    MenuItem(
-      id: '3',
-      name: 'Sate Kambing',
-      category: 'Sate',
-      meat: 'Kambing',
-      price: 50000,
-      description: 'Sate kambing empuk dengan aroma harum',
-      imageUrl: 'assets/sate_kambing.png',
-    ),
-    MenuItem(
-      id: '4',
-      name: 'Tongseng Ayam',
-      category: 'Tongseng',
-      meat: 'Ayam',
-      price: 32000,
-      description: 'Tongseng ayam berkuah dengan sayuran segar',
-      imageUrl: 'assets/tongseng_ayam.png',
-    ),
-    MenuItem(
-      id: '5',
-      name: 'Tongseng Sapi',
-      category: 'Tongseng',
-      meat: 'Sapi',
-      price: 42000,
-      description: 'Tongseng daging sapi empuk dengan kuah gurih',
-      imageUrl: 'assets/tongseng_sapi.png',
-    ),
-    MenuItem(
-      id: '6',
-      name: 'Tongseng Kambing',
-      category: 'Tongseng',
-      meat: 'Kambing',
-      price: 48000,
-      description: 'Tongseng kambing dengan rempah-rempah pilihan',
-      imageUrl: 'assets/tongseng_kambing.png',
-    ),
-  ];
+  final ApiService _apiService = ApiService();
+  List<MenuItem> allMenuItems = [];
+  bool _isLoading = true;
+  String? _error;
 
-  String _selectedCategory = 'Semua';
 
-  List<MenuItem> get filteredItems {
-    if (_selectedCategory == 'Semua') return allMenuItems;
-    return allMenuItems.where((item) => item.category == _selectedCategory).toList();
+  @override
+  void initState() {
+    super.initState();
+    _loadMenus();
   }
+
+  Future<void> _loadMenus() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final menus = await _apiService.getMenus();
+      if (mounted) {
+        setState(() {
+          allMenuItems = menus;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Gagal memuat menu: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -108,74 +82,74 @@ class _MenuScreenState extends State<MenuScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Category Filter
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildCategoryChip('Semua'),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip('Sate'),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip('Tongseng'),
-                  ],
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 60, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(_error!, style: GoogleFonts.poppins(color: Colors.grey[600])),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadMenus,
+                        style: AppStyles.primaryButtonStyle,
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadMenus,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        
+                        // Menu Grid
+                        allMenuItems.isEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Center(
+                                  child: Column(
+                                    children: [
+                                      Icon(Icons.restaurant_menu, size: 60, color: Colors.grey[400]),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Belum ada menu tersedia',
+                                        style: GoogleFonts.poppins(color: Colors.grey[600]),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: 0.68,
+                                  ),
+                                  itemCount: allMenuItems.length,
+                                  itemBuilder: (context, index) {
+                                    final item = allMenuItems[index];
+                                    return _buildMenuCard(context, item);
+                                  },
+                                ),
+                              ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            
-            // Menu Grid
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.75,
-                ),
-                itemCount: filteredItems.length,
-                itemBuilder: (context, index) {
-                  final item = filteredItems[index];
-                  return _buildMenuCard(context, item);
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip(String category) {
-    final isSelected = _selectedCategory == category;
-    return FilterChip(
-      label: Text(
-        category,
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w500,
-          color: isSelected ? Colors.white : AppColors.secondary,
-        ),
-      ),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _selectedCategory = category;
-        });
-      },
-      backgroundColor: Colors.white,
-      selectedColor: AppColors.primary,
-      side: BorderSide(
-        color: isSelected ? AppColors.primary : Colors.grey[300]!,
-      ),
     );
   }
 
@@ -197,9 +171,9 @@ class _MenuScreenState extends State<MenuScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image placeholder
+            // Image
             Container(
-              height: 100,
+              height: 130, // Increased height
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: const BorderRadius.only(
@@ -207,13 +181,42 @@ class _MenuScreenState extends State<MenuScreen> {
                   topRight: Radius.circular(12),
                 ),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 40,
-                  color: AppColors.primary,
-                ),
-              ),
+              child: item.imageUrl.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                      ),
+                      child: item.isAsset 
+                        ? Image.asset(
+                            item.imageUrl,
+                            width: double.infinity,
+                            height: 130,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.network(
+                            item.imageUrl,
+                            width: double.infinity,
+                            height: 130,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Icon(
+                                  Icons.restaurant,
+                                  size: 40,
+                                  color: AppColors.primary,
+                                ),
+                              );
+                            },
+                          ),
+                    )
+                  : Center(
+                      child: Icon(
+                        Icons.restaurant,
+                        size: 40,
+                        color: AppColors.primary,
+                      ),
+                    ),
             ),
             // Content
             Expanded(
@@ -239,6 +242,8 @@ class _MenuScreenState extends State<MenuScreen> {
                         const SizedBox(height: 2),
                         Text(
                           item.meat,
+                          maxLines: 1, // Keep it compact
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
                             fontSize: 10,
                             color: Colors.grey[600],
@@ -247,7 +252,7 @@ class _MenuScreenState extends State<MenuScreen> {
                       ],
                     ),
                     Text(
-                      'Rp ${item.price.toStringAsFixed(0)}',
+                      item.formattedPrice,
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
@@ -262,5 +267,13 @@ class _MenuScreenState extends State<MenuScreen> {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }

@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'constants.dart';
 import 'models.dart';
+import 'services/api_service.dart';
 
 class MenuDetailScreen extends StatefulWidget {
   final MenuItem menuItem;
-
-  const MenuDetailScreen({
-    super.key,
-    required this.menuItem,
-  });
+  const MenuDetailScreen({super.key, required this.menuItem});
 
   @override
   State<MenuDetailScreen> createState() => _MenuDetailScreenState();
 }
 
 class _MenuDetailScreenState extends State<MenuDetailScreen> {
+  final ApiService _apiService = ApiService();
   int _quantity = 1;
 
   @override
   Widget build(BuildContext context) {
+    final menu = widget.menuItem;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -55,54 +56,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name & Category
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.menuItem.name,
-                              style: GoogleFonts.poppins(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.menuItem.category,
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          widget.menuItem.meat,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  Text(menu.name, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(currencyFormatter.format(menu.price), style: GoogleFonts.poppins(fontSize: 20, color: AppColors.primary, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
 
                   // Description

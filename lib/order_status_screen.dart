@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 import 'models.dart';
+import 'services/api_service.dart';
 
 class OrderStatusScreen extends StatefulWidget {
   const OrderStatusScreen({super.key});
@@ -11,66 +12,26 @@ class OrderStatusScreen extends StatefulWidget {
 }
 
 class _OrderStatusScreenState extends State<OrderStatusScreen> {
-  // Dummy order data
-  final List<Order> orders = [
-    Order(
-      id: 'ORD-001',
-      items: [
-        CartItem(
-          menuItem: MenuItem(
-            id: '1',
-            name: 'Sate Ayam',
-            category: 'Sate',
-            meat: 'Ayam',
-            price: 35000,
-            description: 'Sate ayam empuk dengan bumbu kacang yang lezat',
-            imageUrl: 'assets/sate_ayam.png',
-          ),
-          quantity: 2,
-        ),
-      ],
-      status: 'confirmed', // 'pending', 'confirmed', 'completed', 'cancelled'
-      deliveryAddress: 'Jl. Merdeka No. 123, Yogyakarta',
-      paymentMethod: 'transfer',
-      totalPrice: 70000 + 10000, // subtotal + ongkir
-      orderDate: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Order(
-      id: 'ORD-002',
-      items: [
-        CartItem(
-          menuItem: MenuItem(
-            id: '2',
-            name: 'Sate Sapi',
-            category: 'Sate',
-            meat: 'Sapi',
-            price: 45000,
-            description: 'Sate daging sapi premium dengan bumbu tradisional',
-            imageUrl: 'assets/sate_sapi.png',
-          ),
-          quantity: 1,
-        ),
-        CartItem(
-          menuItem: MenuItem(
-            id: '5',
-            name: 'Tongseng Sapi',
-            category: 'Tongseng',
-            meat: 'Sapi',
-            price: 42000,
-            description: 'Tongseng daging sapi empuk dengan kuah gurih',
-            imageUrl: 'assets/tongseng_sapi.png',
-          ),
-          quantity: 2,
-        ),
-      ],
-      status: 'completed',
-      deliveryAddress: 'Jl. Merdeka No. 123, Yogyakarta',
-      paymentMethod: 'qris',
-      totalPrice: 45000 + 84000 + 10000,
-      orderDate: DateTime.now().subtract(const Duration(days: 5)),
-      completedDate: DateTime.now().subtract(const Duration(days: 4)),
-    ),
-  ];
+  final ApiService _apiService = ApiService();
+  List<Order> orders = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() => _isLoading = true);
+    final data = await _apiService.getOrders();
+    if (mounted) {
+      setState(() {
+        orders = data;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,51 +40,51 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.primary,
           elevation: 0,
           centerTitle: false,
           titleSpacing: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.secondary),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             'Pesanan Saya',
             style: GoogleFonts.poppins(
-              color: AppColors.secondary,
+              color: Colors.white,
               fontWeight: FontWeight.w600,
               fontSize: 20,
             ),
           ),
           bottom: TabBar(
-            indicatorColor: AppColors.primary,
+            indicatorColor: Colors.white,
             labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-            labelColor: AppColors.primary,
-            unselectedLabelColor: Colors.grey,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             tabs: const [
               Tab(text: 'Aktif'),
               Tab(text: 'Riwayat'),
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            _buildOrderList(
-              orders.where((o) => o.status != 'completed').toList(),
-              isEmpty: orders.where((o) => o.status != 'completed').isEmpty,
-            ),
-            _buildOrderList(
-              orders.where((o) => o.status == 'completed').toList(),
-              isEmpty: orders.where((o) => o.status == 'completed').isEmpty,
-            ),
-          ],
-        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  _buildOrderList(
+                    orders.where((o) => o.status.toLowerCase() != 'selesai' && o.status.toLowerCase() != 'dibatalkan' && o.status.toLowerCase() != 'cancelled').toList(),
+                  ),
+                  _buildOrderList(
+                    orders.where((o) => o.status.toLowerCase() == 'selesai' || o.status.toLowerCase() == 'dibatalkan' || o.status.toLowerCase() == 'cancelled').toList(),
+                  ),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildOrderList(List<Order> orderList, {bool isEmpty = false}) {
-    if (isEmpty) {
+  Widget _buildOrderList(List<Order> orderList) {
+    if (orderList.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -147,12 +108,15 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: orderList.length,
-      itemBuilder: (context, index) {
-        return _buildOrderCard(orderList[index]);
-      },
+    return RefreshIndicator(
+      onRefresh: _loadOrders,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: orderList.length,
+        itemBuilder: (context, index) {
+          return _buildOrderCard(orderList[index]);
+        },
+      ),
     );
   }
 
@@ -170,7 +134,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  order.id,
+                  order.orderCode,
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -187,7 +151,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    _getStatusLabel(order.status),
+                    order.status,
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -215,7 +179,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          '${order.items[index].menuItem.name} x${order.items[index].quantity}',
+                          '${order.items[index].menuName} x${order.items[index].quantity}',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: AppColors.secondary,
@@ -223,7 +187,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                         ),
                       ),
                       Text(
-                        'Rp ${order.items[index].totalPrice.toStringAsFixed(0)}',
+                        order.items[index].formattedSubtotal,
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -259,19 +223,17 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
             ),
             const SizedBox(height: 6),
 
-            // Payment Method
+            // Payment Status
             Row(
               children: [
                 Icon(
-                  order.paymentMethod == 'transfer'
-                      ? Icons.account_balance
-                      : Icons.qr_code,
+                  Icons.payment,
                   size: 14,
                   color: Colors.grey[600],
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Pembayaran: ${order.paymentMethod == 'transfer' ? 'Transfer Bank' : 'QRIS'}',
+                  'Status Bayar: ${order.paymentStatus}',
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     color: Colors.grey[600],
@@ -300,7 +262,7 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                     ),
                   ),
                   Text(
-                    'Rp ${order.totalPrice.toStringAsFixed(0)}',
+                    order.formattedTotalPrice,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -310,31 +272,6 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-
-            // Detail Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  _showOrderDetail(order);
-                },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.primary),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Lihat Detail',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -342,110 +279,30 @@ class _OrderStatusScreenState extends State<OrderStatusScreen> {
   }
 
   Color _getStatusColor(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pending':
+      case 'menunggu konfirmasi':
         return Colors.orange;
       case 'confirmed':
+      case 'dikirim':
+      case 'diproses':
         return Colors.blue;
       case 'completed':
+      case 'selesai':
         return Colors.green;
       case 'cancelled':
+      case 'dibatalkan':
         return Colors.red;
       default:
         return Colors.grey;
     }
   }
 
-  String _getStatusLabel(String status) {
-    switch (status) {
-      case 'pending':
-        return 'Menunggu Konfirmasi';
-      case 'confirmed':
-        return 'Dikonfirmasi';
-      case 'completed':
-        return 'Selesai';
-      case 'cancelled':
-        return 'Dibatalkan';
-      default:
-        return 'Tidak Diketahui';
-    }
-  }
-
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
-  void _showOrderDetail(Order order) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Detail Pesanan ${order.id}',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDetailRow('Status', _getStatusLabel(order.status)),
-                _buildDetailRow('Alamat', order.deliveryAddress),
-                _buildDetailRow(
-                  'Pembayaran',
-                  order.paymentMethod == 'transfer'
-                      ? 'Transfer Bank'
-                      : 'QRIS',
-                ),
-                _buildDetailRow('Total', 'Rp ${order.totalPrice.toStringAsFixed(0)}'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Tutup',
-                style: GoogleFonts.poppins(color: AppColors.primary),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: AppColors.secondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

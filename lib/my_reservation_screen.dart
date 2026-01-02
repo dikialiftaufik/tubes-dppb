@@ -1,118 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'constants.dart';
+import 'services/api_service.dart';
 
-class MyReservationScreen extends StatelessWidget {
-  // REVISI: Tambahkan parameter ini
+class MyReservationScreen extends StatefulWidget {
   final int initialIndex;
-
   const MyReservationScreen({super.key, this.initialIndex = 0});
+
+  @override
+  State<MyReservationScreen> createState() => _MyReservationScreenState();
+}
+
+class _MyReservationScreenState extends State<MyReservationScreen> {
+  late Future<List<dynamic>> _dataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataFuture = ApiService().getMyReservations();
+  }
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      initialIndex: initialIndex, // Pakai parameter di sini
+      initialIndex: widget.initialIndex,
       child: Scaffold(
-        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text(
-            initialIndex == 0 ? 'Reservasi Berlangsung' : 'Riwayat Reservasi',
-            style: GoogleFonts.poppins(color: Colors.white),
-          ),
-          automaticallyImplyLeading: false, 
+          title: const Text('Reservasi Saya', style: TextStyle(color: Colors.white)),
           backgroundColor: AppColors.primary,
-          bottom: TabBar(
-            indicatorColor: Colors.white,
-            labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          automaticallyImplyLeading: false,
+          bottom: const TabBar(
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
-            tabs: const [
-              Tab(text: 'Berlangsung'),
-              Tab(text: 'Riwayat'),
-            ],
+            indicatorColor: Colors.white,
+            tabs: [Tab(text: 'Berlangsung'), Tab(text: 'Riwayat')],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            _ReservationList(status: 'active'),
-            _ReservationList(status: 'history'),
-          ],
+        body: FutureBuilder<List<dynamic>>(
+          future: _dataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+            if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text("Belum ada reservasi"));
+
+            final all = snapshot.data!;
+            final active = all.where((e) => ['pending', 'confirmed', 'diproses'].contains(e['status'].toString().toLowerCase())).toList();
+            final history = all.where((e) => ['completed', 'cancelled', 'selesai', 'batal'].contains(e['status'].toString().toLowerCase())).toList();
+
+            return TabBarView(children: [_buildList(active), _buildList(history)]);
+          },
         ),
       ),
     );
   }
-}
 
-// Widget List Bawahnya (Tidak Berubah)
-class _ReservationList extends StatelessWidget {
-  final String status;
-  const _ReservationList({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final isHistory = status == 'history';
-    final itemCount = isHistory ? 5 : 2; 
-
+  Widget _buildList(List<dynamic> data) {
+    if (data.isEmpty) return const Center(child: Text("Kosong"));
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: itemCount,
+      itemCount: data.length,
       itemBuilder: (context, index) {
+        final item = data[index];
         return Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.only(bottom: 16),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Meja No. ${index + 10}',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isHistory ? Colors.grey[200] : AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        isHistory ? 'Selesai' : 'Dikonfirmasi',
-                        style: GoogleFonts.poppins(
-                          color: isHistory ? Colors.grey : AppColors.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                const SizedBox(height: 8),
-                _buildRowInfo(Icons.calendar_today, '07 Des 2025'),
-                const SizedBox(height: 4),
-                _buildRowInfo(Icons.access_time, '19:00 WIB'),
-                const SizedBox(height: 4),
-                _buildRowInfo(Icons.people, '4 Orang'),
-              ],
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            title: Text("Reservasi #${item['id']} - ${item['nama_pemesan'] ?? ''}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            subtitle: Text("${item['tanggal']} | ${item['jam_mulai']} | ${item['jumlah_orang']} Org"),
+            trailing: Chip(
+              label: Text(item['status'].toString().toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.white)),
+              backgroundColor: item['status'] == 'pending' ? Colors.orange : (item['status'] == 'confirmed' ? Colors.green : Colors.grey),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildRowInfo(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Text(text, style: GoogleFonts.poppins(color: Colors.grey[800])),
-      ],
     );
   }
 }
