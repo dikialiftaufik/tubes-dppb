@@ -298,6 +298,7 @@ class ApiService {
     required String jamMulai,
     required int jmlOrg,
     required String catatan,
+    String? jamSelesai,
   }) async {
     try {
       final headers = await getHeaders();
@@ -306,11 +307,11 @@ class ApiService {
         Uri.parse('${AppConstants.baseUrl}/reservations'),
         headers: headers,
         body: jsonEncode({
-          'user_id': userId,
-          'tanggal_reservasi': tglReservasi,
-          'waktu_mulai': jamMulai,
-          'jumlah_orang': jmlOrg,
+          'tgl_reservasi': tglReservasi,
+          'jam_mulai': jamMulai,
+          'jml_org': jmlOrg,
           'catatan': catatan,
+          'jam_selesai': jamSelesai,
         }),
       );
       if (response.statusCode == 201 || response.statusCode == 200) {
