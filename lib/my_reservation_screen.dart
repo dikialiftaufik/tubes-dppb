@@ -25,6 +25,14 @@ class _MyReservationScreenState extends State<MyReservationScreen> with TickerPr
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex == 0 ? 2 : (widget.initialIndex == 1 ? 3 : 1); // Default to Home if 0, else history/active
+    if (_selectedIndex == 1 || _selectedIndex == 3) {
+      _tabController = TabController(length: 2, vsync: this, initialIndex: _selectedIndex == 3 ? 1 : 0);
+    }
+    _loadData();
+  }
+
+  void _loadData() {
     _dataFuture = ApiService().getMyReservations();
   }
 
