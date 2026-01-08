@@ -451,15 +451,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _processOrder() async {
     setState(() => _isProcessing = true);
 
-    final success = await _apiService.createOrder(
+    final result = await _apiService.createOrder(
       totalPrice: widget.totalPrice + 10000,
       paymentStatus: 'pending',
+      paymentMethod: _selectedPaymentMethod,
+      items: widget.cartItems,
     );
 
     if (mounted) {
       setState(() => _isProcessing = false);
 
-      if (success) {
+      if (result['success'] == true) {
         // Clear cart after successful order
         await _apiService.clearCart();
 
@@ -483,11 +485,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Gagal membuat pesanan. Silakan coba lagi.',
+              'Gagal: ${result['message']}',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
